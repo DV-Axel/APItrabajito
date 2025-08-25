@@ -1,5 +1,8 @@
-import express from "express";
+import { Router } from 'express';
+import * as UsuarioController from '../controllers/UsuarioController.js';
 
-const route = express.Router();
+const router = Router();
 
-export default route;
+router.post('/login', UsuarioController.getUsuarioLogin);
+
+export default router;
