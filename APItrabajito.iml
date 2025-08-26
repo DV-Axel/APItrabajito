@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/postgres" />
+      <excludeFolder url="file://$MODULE_DIR$/postgres/pg_commit_ts" />
+      <excludeFolder url="file://$MODULE_DIR$/postgres/pg_dynshmem" />
+      <excludeFolder url="file://$MODULE_DIR$/postgres/pg_logical/mappings" />
+      <excludeFolder url="file://$MODULE_DIR$/postgres/pg_logical/snapshots" />
+      <excludeFolder url="file://$MODULE_DIR$/postgres/pg_notify" />
+      <excludeFolder url="file://$MODULE_DIR$/postgres/pg_replslot" />
+      <excludeFolder url="file://$MODULE_DIR$/postgres/pg_serial" />
+      <excludeFolder url="file://$MODULE_DIR$/postgres/pg_snapshots" />
+      <excludeFolder url="file://$MODULE_DIR$/postgres/pg_stat" />
+      <excludeFolder url="file://$MODULE_DIR$/postgres/pg_tblspc" />
+      <excludeFolder url="file://$MODULE_DIR$/postgres/pg_twophase" />
+      <excludeFolder url="file://$MODULE_DIR$/postgres/pg_wal/archive_status" />
+      <excludeFolder url="file://$MODULE_DIR$/public/images" />
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

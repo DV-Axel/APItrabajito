@@ -1,0 +1,208 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  //output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int      @id @default(autoincrement())
+  firstName         String   @db.VarChar(45)
+  lastName          String   @db.VarChar(70)
+  dni               Int
+  email             String   @db.VarChar(80)
+  birthDate         DateTime @db.Date
+  password          String   @db.VarChar(255)
+  phone             Int
+  registrationDate  DateTime @db.Date
+  isVerified        Boolean
+  address           String   @db.VarChar(60)
+  worker            Worker?
+  // Relationships
+  jobRequests JobRequest[]
+
+  @@map("users")
+}
+
+model Worker {
+  id                    Int      @id @default(autoincrement())
+  userId                Int      @unique
+  description           String   @db.Text
+  workLocation          String   @db.VarChar(100)
+  availability          String   @db.VarChar(100)
+  rating                Decimal  @db.Decimal(3, 2)
+  jobsCompleted         Int
+  profilePicture        String   @db.VarChar(255)
+  createdAt             DateTime @db.Timestamp
+
+  // Relationships
+  user                  User     @relation(fields: [userId], references: [id])
+  workerCategories      WorkerCategory[]
+  sponsorWorkers        SponsorWorker[]
+  applications          Application[]
+
+  @@map("workers")
+}
+
+model WorkerCategory {
+  workerId              Int
+  categoryId            Int
+  isPrimary             Boolean
+  experienceLevel       String   @db.VarChar(45)
+  hasCertificate        Boolean
+  isActive              Boolean
+  createdAt             DateTime @db.Timestamp
+  baseRate              Decimal  @db.Decimal(10, 2)
+
+  // Relationships
+  worker   Worker   @relation(fields: [workerId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@id([workerId, categoryId])
+  @@map("worker_categories")
+}
+
+model Category {
+  id          Int    @id @default(autoincrement())
+  name        String @db.VarChar(45)
+  description String @db.Text
+
+  // Relationships
+  workerCategories  WorkerCategory[]
+  sponsorCategories SponsorCategory[]
+
+  @@map("categories")
+}
+
+model SponsorCategory {
+  sponsorId  Int
+  categoryId Int
+
+  // Relationships
+  sponsor  Sponsor  @relation(fields: [sponsorId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@id([sponsorId, categoryId])
+  @@map("sponsor_categories")
+}
+
+model SponsorWorker {
+  sponsorId       Int
+  workerId        Int
+  linkDate        DateTime @default(now())
+  isActive        Boolean
+
+  // Relationships
+  sponsor Sponsor @relation(fields: [sponsorId], references: [id])
+  worker  Worker  @relation(fields: [workerId], references: [id])
+
+  @@id([sponsorId, workerId])
+  @@map("sponsor_workers")
+}
+
+model Sponsor {
+  id              Int    @id @default(autoincrement())
+  name            String @db.VarChar(45)
+  address         String @db.VarChar(45)
+  phone           Int
+  taxId           Int
+  businessName    String @db.VarChar(45)
+  registeredAt    DateTime @default(now())
+
+  // Relationships
+  sponsorCategories SponsorCategory[]
+  sponsorWorkers    SponsorWorker[]
+  inventory         SponsorInventory[]
+
+  @@map("sponsors")
+}
+
+model SponsorInventory {
+  sponsorId       Int
+  productId       Int
+  stock           Int
+  sellingPrice    Int
+  minSale         Int
+  maxSale         Int
+  saleUnit        String @db.VarChar(30)
+
+  // Relationships
+  sponsor Sponsor @relation(fields: [sponsorId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@id([sponsorId, productId])
+  @@map("sponsor_inventory")
+}
+
+model Product {
+  id          Int    @id @default(autoincrement())
+  name        String @db.VarChar(70)
+  brand       String @db.VarChar(45)
+  volume      Int
+  volumeUnit  String @db.VarChar(30)
+
+  // Relationships
+  sponsorInventory SponsorInventory[]
+
+  @@map("products")
+}
+
+model JobRequest {
+  id                        Int      @id @default(autoincrement())
+  title                     String   @db.VarChar(70)
+  createdAt                 DateTime @db.Date
+  description               String   @db.Text
+  userId                    Int
+  includesMaterials         Boolean
+  requiresVisit             Boolean
+  qualification             String   @db.VarChar(45)
+  startDate                 DateTime @db.Date
+  endDate                   DateTime @db.Date
+  statusId                  Int
+  attachments               String   @db.VarChar(255)
+  selectedApplicationId     Int
+
+  // Relationships
+  user         User            @relation(fields: [userId], references: [id])
+  status       JobRequestStatus @relation(fields: [statusId], references: [id])
+  applications Application[]
+
+  @@map("job_requests")
+}
+
+model Application {
+  id                Int      @id @default(autoincrement())
+  jobRequestId      Int
+  workerId          Int
+  submittedAt       DateTime @db.Date
+  budget            Int
+  description       String   @db.Text
+  materials         String   @db.VarChar(255)
+  budgetFile        String   @db.VarChar(255)
+  visitDate         DateTime @db.Date
+
+  // Relationships
+  jobRequest JobRequest @relation(fields: [jobRequestId], references: [id])
+  worker     Worker     @relation(fields: [workerId], references: [id])
+
+  @@map("applications")
+}
+
+model JobRequestStatus {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(45)
+
+  // Relationships
+  jobRequests JobRequest[]
+
+  @@map("job_request_statuses")
+}
