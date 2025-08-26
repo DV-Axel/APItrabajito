@@ -17,6 +17,7 @@
    - Verificar que la imagen se haya cargado correctamente: docker images
    - Luego, ejecutar en la carpeta del proyecto: docker-compose up -d
    - Para verificar que el contenedor esté corriendo: docker ps
+   - Aqui se creará la carpeta Postgres automaticamente en la raiz
 
 
 5. Crear la base de datos y las tablas:
