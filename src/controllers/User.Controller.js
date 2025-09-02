@@ -4,6 +4,8 @@ import { generateToken, verifyToken } from "../utils/jwt.js";
 import { buildConfirUrl } from "../utils/url.js";
 import { transporter } from "../utils/mailer.js";
 
+
+
 export const signup = async(req, res) => {
     try {
         const {
@@ -62,7 +64,7 @@ export const signup = async(req, res) => {
         });
 
         res.status(200).json({ message: "Usuario creado. Revisa tu correo para confirmar tu cuenta" });
-
+                
         } catch (error) {
             console.error("signup error:", error);
             res.status(500).json({ error: "Error en el registro", detail: error.message });
