@@ -1,6 +1,6 @@
 import { prisma } from "../data/prisma.js";
 import bcrypt from "bcryptjs";
-import { generateToken } from "../utils/jwt.js";
+import { generateToken, verifyToken } from "../utils/jwt.js";
 import { buildConfirUrl } from "../utils/url.js";
 import { transporter } from "../utils/mailer.js";
 
@@ -73,38 +73,33 @@ export const signup = async(req, res) => {
 
 export const confirmEmail = async(req, res) => {
     const { token } = req.query;
-
+    
     try {
         // Verifica y decodifica el token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = verifyToken(token);
         const userId = decoded.userId;
+       
+        const user = await prisma.user.findUnique({ where: { id: userId }});
+        
+        if (!user) {
+            return res.status(400).json({ message: "Usuario no encontrado"});
+        }
+
+        if (user.isVerified) {
+            return res.status(400).json({ message: "El usuario ya fue confirmado"});
+        }
 
         // Busca y actualiza el usuario
-        const user = await prisma.user.update({
+        const updateUser = await prisma.user.update({
             where: { id: userId },
             data: { isVerified: true},
         });
 
-        res.status(200).json({ message: "Correo confirmado correctamente", usuario });
+        res.status(200).json({ message: "Correo confirmado correctamente", updateUser });
     } catch (error) {
         res.status(400).json({ message: "Token inválido o expirado", error: error.message });
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
