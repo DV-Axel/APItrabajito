@@ -82,6 +82,9 @@ export const confirmEmail = async(req, res) => {
     try {
         // Verifica y decodifica el token
         const decoded = verifyToken(token);
+
+        console.log("entre al decode");
+
         const userId = decoded.userId;
        
         const user = await prisma.user.findUnique({ where: { id: userId }});
@@ -133,7 +136,7 @@ export const login = async(req, res) => {
         res.status(200).json({
             message: "Login exitoso",
             token,
-            user: { id: user.id, email: user.email },
+            user: { id: user.id, email: user.email, nombre: user.firstName, apellido: user.lastName },
         });
 
     } catch (error) {
