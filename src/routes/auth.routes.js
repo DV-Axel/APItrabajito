@@ -11,12 +11,13 @@ import {
 export const authRouter = Router();
 
 
-// Registro y login
+// Registro 
 authRouter.post("/signup", signup);
-authRouter.post("/login", login);
-
 // Confirmación de email
 authRouter.get("/confirm", confirmEmail);
+// Login
+authRouter.post("/login", login);
+
 authRouter.post("/resend-confirmation", resendConfirmation);
 
 // Recuperación de contraseña
