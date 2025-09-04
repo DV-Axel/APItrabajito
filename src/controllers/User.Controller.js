@@ -18,7 +18,27 @@ export const getAllUsers = async (req, res) => {
 }
 
 
+export const getUserById = async(req, res) => {
 
+    const { id } = req.params;
+
+    if (isNaN(id)) {
+        return res.status(400).json({ message: "El id debe ser un número válido" });
+    }
+
+    try {
+        const user = await prisma.user.findUnique({ where: { id: Number(id) } });
+               
+        if (!user) {
+            return res.status(500).json({ message:"Error al encontrar el usuario" })
+        };
+
+        res.status(200).json({ user });
+
+    } catch (error) {
+        res.status(500).json({ message: "Error al consultar el servidor" })
+    }
+}
 
 
 
