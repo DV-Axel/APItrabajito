@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { getAllUsers, getUserById } from '../controllers/User.Controller.js'
+import { getAllUsers, getUserById, setRequestService } from '../controllers/User.Controller.js'
 
 export const userRouter = Router();
 
 
 userRouter.get('/', getAllUsers);
 userRouter.get('/:id', getUserById);
+userRouter.post('/set-request-service', setRequestService);
 
 
 export default userRouter;
