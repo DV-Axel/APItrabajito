@@ -1,13 +1,14 @@
 import { Router } from 'express';
-import { getAllUsers, getUserById, setRequestService } from '../controllers/User.Controller.js'
+import { getAllUsers, getUserById, updateProfilePicture } from '../controllers/User.Controller.js'
+import { upload } from '../middlewares/upload.js';
 
 export const userRouter = Router();
 
 
 userRouter.get('/', getAllUsers);
 userRouter.get('/:id', getUserById);
-userRouter.post('/set-request-service', setRequestService);
 
+userRouter.put('/profile-picture/:id', upload.single('profilePicture'), updateProfilePicture);
 
 export default userRouter;
 

@@ -19,6 +19,7 @@ model User {
   firstName         String   @db.VarChar(45)
   lastName          String   @db.VarChar(70)
   dni               Int
+  idType            String
   email             String   @unique @db.VarChar(80)
   birthDate         DateTime @db.Date
   password          String   @db.VarChar(255)
@@ -29,6 +30,7 @@ model User {
   number            String   @db.VarChar(10)
   postalCode        String   @db.VarChar(10)
   departmentNumber  String?  @db.VarChar(10) 
+  profilePicture    String?
   worker            Worker?
   // Relationships
   jobRequests JobRequest[]
@@ -51,7 +53,7 @@ model Worker {
   user                  User     @relation(fields: [userId], references: [id])
   workerCategories      WorkerCategory[]
   sponsorWorkers        SponsorWorker[]
-  applications          Application[]
+  
 
   @@map("workers")
 }
@@ -162,50 +164,41 @@ model Product {
 model JobRequest {
   id                        Int      @id @default(autoincrement())
   title                     String   @db.VarChar(70)
-  createdAt                 DateTime @db.Date
+  urgency                   Boolean
+  date                      DateTime @db.Date
   description               String   @db.Text
-  userId                    Int
-  includesMaterials         Boolean
-  requiresVisit             Boolean
-  qualification             String   @db.VarChar(45)
-  startDate                 DateTime @db.Date
-  endDate                   DateTime @db.Date
-  statusId                  Int
-  attachments               String   @db.VarChar(255)
-  selectedApplicationId     Int
+  extraData                 Json
 
-  // Relationships
-  user         User            @relation(fields: [userId], references: [id])
-  status       JobRequestStatus @relation(fields: [statusId], references: [id])
-  applications Application[]
+  user                      User     @relation(fields: [userId], references: [id])
+  userId                    Int
 
   @@map("job_requests")
 }
 
-model Application {
-  id                Int      @id @default(autoincrement())
-  jobRequestId      Int
-  workerId          Int
-  submittedAt       DateTime @db.Date
-  budget            Int
-  description       String   @db.Text
-  materials         String   @db.VarChar(255)
-  budgetFile        String   @db.VarChar(255)
-  visitDate         DateTime @db.Date
+// model Application {
+//   id                Int      @id @default(autoincrement())
+//   jobRequestId      Int
+//   workerId          Int
+//   submittedAt       DateTime @db.Date
+//   budget            Int
+//   description       String   @db.Text
+//   materials         String   @db.VarChar(255)
+//   budgetFile        String   @db.VarChar(255)
+//   visitDate         DateTime @db.Date
 
-  // Relationships
-  jobRequest JobRequest @relation(fields: [jobRequestId], references: [id])
-  worker     Worker     @relation(fields: [workerId], references: [id])
+//   // Relationships
+//   jobRequest JobRequest @relation(fields: [jobRequestId], references: [id])
+//   worker     Worker     @relation(fields: [workerId], references: [id])
 
-  @@map("applications")
-}
+//   @@map("applications")
+// }
 
-model JobRequestStatus {
-  id   Int    @id @default(autoincrement())
-  name String @db.VarChar(45)
+// model JobRequestStatus {
+//   id   Int    @id @default(autoincrement())
+//   name String @db.VarChar(45)
 
-  // Relationships
-  jobRequests JobRequest[]
+//   // Relationships
+//   jobRequests JobRequest[]
 
-  @@map("job_request_statuses")
-}
+//   @@map("job_request_statuses")
+// }

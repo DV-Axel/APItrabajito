@@ -20,7 +20,8 @@ export const signup = async(req, res) => {
             address,
             number,
             departmentNumber, 
-            postalCode
+            postalCode,
+            idType,
             } = req.body;
             
         // Verificar si el usuario existe
@@ -47,7 +48,9 @@ export const signup = async(req, res) => {
                 address,
                 number, 
                 departmentNumber,
-                postalCode
+                postalCode,
+                idType,
+                profilePicture: '/images/avatar.png'
             }
         });
 
