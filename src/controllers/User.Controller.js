@@ -41,7 +41,10 @@ export const getUserById = async(req, res) => {
 }
 
 export const setRequestService = async (req, res) => {
-    console.log(req.body); // Aquí ves los datos enviados desde el front
+    const datos = req.body;
+
+    console.log(datos.serviceKey)
+
     res.status(200).json({ message: "Datos recibidos", data: req.body });
 }
 

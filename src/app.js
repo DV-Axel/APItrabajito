@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import router, { userRouter } from './routes/user.routes.js';
 import authRouter from './routes/auth.routes.js';
-import { jobRequestRouter } from './routes/job_request..routes.js';
+import { jobRequestRouter } from './routes/job_request.routes.js';
 
 dotenv.config();
 
