@@ -41,7 +41,24 @@ export const getUserById = async(req, res) => {
 }
 
 
+export const updateProfilePicture = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!req.file) {
+            return res.status(400).json( { error: 'No se subió ninguna imagen' } );
+        }
+        const imagePath = `/images/${req.file.filename}`;
 
+        const user = await prisma.user.update({
+            where: { id: Number(id) },
+            data: { profilePicture: imagePath }
+        }); 
+
+        res.json( { sucess: true, imagePath, user });
+    } catch (error) {
+        res.status(500).json( { error: error.message });
+    }
+}
 
 
 

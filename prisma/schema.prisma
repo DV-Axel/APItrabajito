@@ -19,6 +19,7 @@ model User {
   firstName         String   @db.VarChar(45)
   lastName          String   @db.VarChar(70)
   dni               Int
+  idType            String
   email             String   @unique @db.VarChar(80)
   birthDate         DateTime @db.Date
   password          String   @db.VarChar(255)
@@ -29,6 +30,7 @@ model User {
   number            String   @db.VarChar(10)
   postalCode        String   @db.VarChar(10)
   departmentNumber  String?  @db.VarChar(10) 
+  profilePicture    String?
   worker            Worker?
   // Relationships
   jobRequests JobRequest[]
