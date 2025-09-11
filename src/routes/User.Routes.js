@@ -12,6 +12,15 @@ userRouter.put('/profile-picture/:id', uploadProfilePicture.single('profilePictu
 export default userRouter;
 
 
+
+
+
+
+
+
+
+
+
 //router.get('/:id', getUsuarioById);
 //router.post('/', createUser);
 //router.put('/:id', updateUsuario);
