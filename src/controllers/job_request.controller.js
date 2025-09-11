@@ -3,31 +3,72 @@ import { prisma } from "../data/prisma.js";
 
 export const createJobRequest = async (req, res) => {
     try {
-        console.log(req.body); // Muestra los datos en consola
+        console.log("Petición recibida");
+        console.log("Body:", req.body);
+        console.log("Files:", req.files); // Muestra los datos en consola
 
-        /*datos a guardar en COLUMNAS
-        *
-        * serviceKey
-        * titulo
-        * urgencia
-        * fecha(la que se solicita el servicio)
-        * fechaDeCreacionServicio(la fecha en la que se crea el servicio)
-        * descripcion
-        * address(fijate de guardar en json o parsealo como quede bien)
-        * tipoPropiedad
-        * piso
-        * numeroDepto
-        * position(esto en json, quiza nos sirva para implemetnar algo de geolocalizacion)
-        * photos(creo que un json vas a poder guardar bien macheado name y notas de cada una).
-        *
-        *
-        * LOS DEMAS DATOS QUE FALTAN SON EXTRADATA, GUARDALO EN JSON
-        *
-        * */
+        const parseIfString = ( data ) =>{
+            if (typeof data == 'string') return JSON.parse( data );
+            return data;
+        }
 
+        const {
+            serviceKey,
+            form,
+            address,
+            propertyType,
+            floor,
+            aparmentNumber,
+            position,
+            userId
+        } = req.body;
 
-        res.status(200).json({ message: "Datos recibidos" });
+        // Parsear si vienen como string (form-data)
+        const parsedForm = parseIfString(form);
+        const parsedAddress = parseIfString(address);
+        const parsedPosition = parseIfString(position);
+
+        // Procesar fotos subidas (si llegan como archivos)
+        let photos = [];
+        if(req.files && req.files.length > 0){
+            photos = req.files.map(file => ({
+                name: file.originalname,
+                url: `/images/jobRequests/${file.filename}`,
+                note: ''
+            }));
+        } else if (req.body.photos){
+            // Si el fronten envia un array de fotos como JSON string
+            photos = parseIfString(req.body.photos);
+        }
+
+        const extraData = { ...parsedForm};
+        delete extraData.titulo;
+        delete extraData.urgencia;
+        delete extraData.fecha;
+        delete extraData.descripcion;
+
+        console.log("Antes de guardar en la DB");
+        const jobRequest = await prisma.jobRequest.create({
+            data: {
+                serviceKey,
+                title: parsedForm.titulo,
+                urgency: parsedForm.urgencia === "si" || parsedForm.urgencia === true ? true : false,                jobCreationDate: new Date(),
+                date: new Date(parsedForm.fecha),
+                description: parsedForm.descripcion,
+                address: parsedAddress,
+                propertyType: propertyType || req.body.tipoPropiedad,
+                floor: floor || req.body.piso,
+                aparmentNumber: aparmentNumber || req.body.numeroDepto,
+                position: parsedPosition,
+                extraData,
+                photos,
+                userId: Number(userId)
+            }
+        });
+        console.log("Guardado en la DB:", jobRequest);
+        res.status(200).json(jobRequest);
     } catch (error) {
+        console.error("Error al crear JobRequest:", error);
         res.status(500).json({ error: "Imposible crear JobRequest" });
     }
 };

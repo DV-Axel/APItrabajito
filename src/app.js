@@ -12,7 +12,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use('/images', express.static('public/images'));
+
+app.use('/images/profilePicture', express.static('public/images/profilePicture'));
+app.use('/images/jobRequests', express.static('public/images/jobRequests'));
+
 
 app.use('/users', userRouter);
 app.use('/auth', authRouter);

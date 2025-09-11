@@ -3,15 +3,15 @@ import path from 'path';
 import fs from 'fs';
 
 const rootPath = path.resolve();
-const imagesFolder = path.join(rootPath, 'public/images');
+const profileFolder = path.join(rootPath, 'public/images/profilePicture');
 
-if( !fs.existsSync( imagesFolder )){
-    fs.mkdirSync( imagesFolder, { recursive: true } );
+if( !fs.existsSync( profileFolder )){
+    fs.mkdirSync( profileFolder, { recursive: true } );
 }
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb( null, imagesFolder );
+        cb( null, profileFolder );
     },
     filename: (req, file, cb) => {
         cb( null, Date.now() + '-' + file.originalname );
@@ -30,7 +30,7 @@ const fileFilter = ( req, file, cb ) => {
     }
 };
 
-export const upload = multer({
+export const uploadProfilePicture = multer({
     storage,
     limits: { fileSize: 50 * 1024 * 1024 },
     fileFilter
