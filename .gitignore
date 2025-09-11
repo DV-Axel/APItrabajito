@@ -46,5 +46,5 @@ coverage/
 
 
 # Ignorar imágenes subidas por usuarios
-public/images/jobRequests/
-public/images/profilePicture/
+public/images/jobRequests/*
+public/images/profilePicture/*
