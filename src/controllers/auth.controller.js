@@ -16,7 +16,6 @@ export const signup = async(req, res) => {
             birthDate,
             password,
             phone,
-            isVerified,
             address,
             number,
             departmentNumber, 
@@ -38,7 +37,7 @@ export const signup = async(req, res) => {
             data: {
                 firstName,
                 lastName,
-                dni: Number(dni),
+                dni,
                 email,
                 birthDate: new Date(birthDate),
                 password: hashedPassword,

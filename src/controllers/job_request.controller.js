@@ -88,6 +88,7 @@ export const getAllJobRequests = async (req, res) => {
     }
 };
 
+
 // Obtener un JobRequest por ID
 export const getJobRequestById = async (req, res) => {
     try {
@@ -104,3 +105,27 @@ export const getJobRequestById = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+
+
+// Obtener un JobRequest por el Id del usuario
+export const getJobRequestsByUserId = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        if (isNaN(id)) {
+            return res.status(400).json({ message: "El id debe ser un número válido" });
+        }   
+
+        const jobRequests = await prisma.jobRequest.findMany({
+            where: { userId: Number(id) },
+            // include: { user: true }
+        });
+        if (jobRequests.length <= 0) {
+            return res.status(404).json({ error: 'JobRequests no encontrados para el usuario'})
+        }
+        res.json(jobRequests);
+    } catch (error) {
+        res.status(500).json( { error: error.message } );
+    }
+}

@@ -7,12 +7,15 @@ import {
   forgotPassword, 
   resetPassword 
 } from "../controllers/auth.controller.js";
+import { validateSchema } from '../middlewares/validations/validateSchema.js';
+import { createUserSchema } from '../validations/user.validation.js';
+
 
 export const authRouter = Router();
 
 
 // Registro 
-authRouter.post("/signup", signup);
+authRouter.post("/signup", validateSchema(createUserSchema) ,signup);
 // Confirmación de email
 authRouter.get("/confirm", confirmEmail);
 // Login

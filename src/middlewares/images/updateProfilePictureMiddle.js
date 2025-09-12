@@ -30,7 +30,7 @@ const fileFilter = ( req, file, cb ) => {
     }
 };
 
-export const uploadProfilePicture = multer({
+export const uploadProfilePictureMiddle = multer({
     storage,
     limits: { fileSize: 50 * 1024 * 1024 },
     fileFilter

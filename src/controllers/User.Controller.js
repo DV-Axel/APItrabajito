@@ -18,6 +18,7 @@ export const getAllUsers = async (req, res) => {
 }
 
 
+
 export const getUserById = async(req, res) => {
 
     const { id } = req.params;
@@ -40,6 +41,8 @@ export const getUserById = async(req, res) => {
     }
 }
 
+
+
 export const setRequestService = async (req, res) => {
     const datos = req.body;
 
@@ -47,6 +50,7 @@ export const setRequestService = async (req, res) => {
 
     res.status(200).json({ message: "Datos recibidos", data: req.body });
 }
+
 
 
 
