@@ -49,7 +49,7 @@ export const signup = async(req, res) => {
                 departmentNumber,
                 postalCode,
                 idType,
-                profilePicture: '/images/avatar.png'
+                profilePicture: '/images/avatar.jpeg'
             }
         });
 
