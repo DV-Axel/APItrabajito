@@ -8,7 +8,6 @@ export const jobRequestRouter = Router();
 
 
 jobRequestRouter.post('/', uploadJobRequestPhotos.array('photos'), createJobRequest);
-
 // Para verificar todos los jobRequest, SOLO PRUEBA
 jobRequestRouter.get("/", getAllJobRequests);
 

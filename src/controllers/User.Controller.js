@@ -101,6 +101,31 @@ export const updateUser = async (req, res) => {
 
     const updateData = {};
     if( firstName !== undefined ) updateData.firstName = firstName;
+    if( lastName !== undefined ) updateData.lastName = lastName;
+    if( dni !== undefined ) updateData.dni = dni;
+    if( idType !== undefined ) updateData.idType = idType;
+    if( birthDate !== undefined ) updateData.birthDate = new Date(birthDate);
+    if( phone !== undefined ) updateData.phone = Number(phone);
+    if( address !== undefined ) updateData.address = address;
+    if( number !== undefined ) updateData.number = number;
+    if( postalCode !== undefined ) updateData.postalCode = postalCode;
+    if( deparmentNumber !== undefined ) updateData.deparmentNumber = deparmentNumber;
+
+    try {
+        const user = await prisma.user.findUnique({ where: { id: Number(id) } });
+        if(!user) return res.status(404).json( { error: "Usuario no encontrado" } );
+
+        const updateUser = await prisma.user.update( {  
+            where: { id: Number(id) },
+            data: updateData
+        });
+
+        res.json({ sucess: true, user: updateUser });
+    } catch (error) {
+        console.error("Error al actualizar usuario:", error);
+        res.status(500).json({ error: "Error al actualizar usuario", details: error.message });
+    }
+
 }
 
 
