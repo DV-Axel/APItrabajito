@@ -53,6 +53,67 @@ export const setRequestService = async (req, res) => {
 
 
 
+export const deleteUser = async ( req, res ) => {
+
+    const { id } = req.params;
+
+    if (isNaN(id)) {
+        return res.status(400).json( { message: "El id debe ser un número válido"} )
+    };
+
+    const jobRequest = await prisma.jobRequest.findMany( { where: { userId: Number(id) } } );
+    if( jobRequest.length > 0 ) return res.status(400).json( { error: "No puedes eliminar un usuario con servicios pendientes"} )
+
+    try {
+        const user = await prisma.user.findUnique({ where: { id: Number(id) } });
+        if(!user) return res.status( 404 ).json( { error: "Usuario no encontrado" } );
+
+        const deleted = await prisma.user.delete({
+            where: { id: Number(id) }
+        });
+        res.json(deleted)
+    } catch (error) {
+        return res.status(400).json( { error: "Eliminación imposible de realizar", data: error.message } );
+    }
+}
+
+
+
+// Actualizar datos basicos (NO SENSIBLES)
+export const updateUser = async (req, res) => {
+    const { id } = req.params;
+    if (isNaN(id)) {
+        return res.status(400).json( { message: "El id debe ser un número válido"} )
+    };
+
+    const { 
+        firstName,
+        lastName,
+        dni,
+        idType,
+        birthDate,
+        phone,
+        address,
+        number,
+        postalCode,
+        deparmentNumber
+    } = req.body;
+
+    const updateData = {};
+    if( firstName !== undefined ) updateData.firstName = firstName;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 export const updateProfilePicture = async (req, res) => {
     try {
@@ -76,46 +137,3 @@ export const updateProfilePicture = async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-// Crear un usuario
-// export const createUser = async (req, res) => {
-//     try {
-//         const {
-//             firstName,
-//             lastName,
-//             dni,
-//             email,
-//             birthDate,
-//             password,
-//             phone,
-//             registrationDate,
-//             isVerified,
-//             address
-//         } = req.body;
-
-//         const nuevoUsuario = await prisma.user.create({
-//             data: {
-//                 firstName,
-//                 lastName,
-//                 dni: Number(dni),
-//                 email,
-//                 birthDate: new Date(birthDate),
-//                 password,
-//                 phone: Number(phone),
-//                 registrationDate: new Date(registrationDate),
-//                 isVerified: Boolean(isVerified),
-//                 address
-//             }
-//         });
-//         res.status(201).json(nuevoUsuario);
-//     } catch (err) {
-//         console.error('createUsuario error:', err);
-//         res.status(500).json({ error: 'Error al crear usuario' });
-//     }
-// };
