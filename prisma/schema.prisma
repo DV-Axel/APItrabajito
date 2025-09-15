@@ -180,7 +180,18 @@ model JobRequest {
   user                      User     @relation(fields: [userId], references: [id])
   userId                    Int
 
+  status                    Status   @relation(fields: [statusId], references: [id])
+  statusId                  Int
+
   @@map("job_requests")
+}
+
+model Status{
+  id  Int @id @default(autoincrement())
+  name String @db.VarChar(45)
+
+  jobRequests JobRequest[]
+  @@map("statuses")
 }
 
 // model Application {
