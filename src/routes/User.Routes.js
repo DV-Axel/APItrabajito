@@ -9,8 +9,6 @@ export const userRouter = Router();
 
 userRouter.get('/', getAllUsers);
 userRouter.get('/:id', validateSchema(userIdSchema, "params") ,getUserById);
-
-
 userRouter.put('/profile-picture/:id', uploadProfilePictureMiddle.single('profilePicture'), updateProfilePicture);
 
 export default userRouter;
