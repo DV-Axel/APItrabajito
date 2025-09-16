@@ -31,11 +31,15 @@ export const createJobRequest = async (req, res) => {
         // Procesar fotos subidas (si llegan como archivos)
         let photos = [];
         if(req.files && req.files.length > 0){
-            photos = req.files.map(file => ({
+            let notes = req.body.notes || [];
+            if(!Array.isArray(notes)) notes = [notes];
+
+            photos = req.files.map( (file, index) => ({
                 name: file.originalname,
                 url: `/images/jobRequests/${file.filename}`,
-                note: ''
+                note: notes[index] || ''
             }));
+
         } else if (req.body.photos){
             // Si el fronten envia un array de fotos como JSON string
             photos = parseIfString(req.body.photos);
@@ -62,7 +66,8 @@ export const createJobRequest = async (req, res) => {
                 position: parsedPosition,
                 extraData,
                 photos,
-                userId: Number(userId)
+                userId: Number(userId),
+                statusId: 1
             }
         });
         console.log("Guardado en la DB:", jobRequest);

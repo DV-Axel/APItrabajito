@@ -1,10 +1,4 @@
 import { prisma } from "../data/prisma.js";
-import bcrypt from "bcryptjs";
-import { generateToken, verifyToken } from "../utils/jwt.js";
-import { buildConfirUrl } from "../utils/url.js";
-import { transporter } from "../utils/mailer.js";
-
-
 
 
 export const getAllUsers = async (req, res) => {

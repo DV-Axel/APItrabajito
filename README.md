@@ -60,3 +60,7 @@
 
 7. Verificar tablas y datos
    - Abrir TablePlus --> refrescar "trabajito_db" --> deberia aparecer las tablas creadas por las migraciones.
+
+
+8. Para actualilzar modificaciones en esquema-prisma: npx prisma migrate dev
+   Para ejecutar el SEED cadaz vez que crees la db o corras una migración: npx prisma db seed

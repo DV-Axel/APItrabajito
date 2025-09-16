@@ -15,58 +15,57 @@ datasource db {
 }
 
 model User {
-  id                Int      @id @default(autoincrement())
-  firstName         String   @db.VarChar(45)
-  lastName          String   @db.VarChar(70)
-  dni               String   @db.VarChar(15)
-  idType            String
-  email             String   @unique @db.VarChar(80)
-  birthDate         DateTime @db.Date
-  password          String   @db.VarChar(255)
-  phone             Int
-  registrationDate  DateTime @db.Date
-  isVerified        Boolean
-  address           String   @db.VarChar(60)
-  number            String   @db.VarChar(10)
-  postalCode        String   @db.VarChar(10)
-  departmentNumber  String?  @db.VarChar(10) 
-  profilePicture    String?
-  worker            Worker?
+  id               Int          @id @default(autoincrement())
+  firstName        String       @db.VarChar(45)
+  lastName         String       @db.VarChar(70)
+  dni              String       @db.VarChar(15)
+  idType           String
+  email            String       @unique @db.VarChar(80)
+  birthDate        DateTime     @db.Date
+  password         String       @db.VarChar(255)
+  phone            Int
+  registrationDate DateTime     @db.Date
+  isVerified       Boolean
+  address          String       @db.VarChar(60)
+  number           String       @db.VarChar(10)
+  postalCode       String       @db.VarChar(10)
+  departmentNumber String?      @db.VarChar(10)
+  profilePicture   String?
+  worker           Worker?
   // Relationships
-  jobRequests JobRequest[]
+  jobRequests      JobRequest[]
 
   @@map("users")
 }
 
 model Worker {
-  id                    Int      @id @default(autoincrement())
-  userId                Int      @unique
-  description           String   @db.Text
-  workLocation          String   @db.VarChar(100)
-  availability          String   @db.VarChar(100)
-  rating                Decimal  @db.Decimal(3, 2)
-  jobsCompleted         Int
-  profilePicture        String   @db.VarChar(255)
-  createdAt             DateTime @db.Timestamp
+  id             Int      @id @default(autoincrement())
+  userId         Int      @unique
+  description    String   @db.Text
+  workLocation   String   @db.VarChar(100)
+  availability   String   @db.VarChar(100)
+  rating         Decimal  @db.Decimal(3, 2)
+  jobsCompleted  Int
+  profilePicture String   @db.VarChar(255)
+  createdAt      DateTime @db.Timestamp
 
   // Relationships
-  user                  User     @relation(fields: [userId], references: [id])
-  workerCategories      WorkerCategory[]
-  sponsorWorkers        SponsorWorker[]
-  
+  user             User             @relation(fields: [userId], references: [id])
+  workerCategories WorkerCategory[]
+  sponsorWorkers   SponsorWorker[]
 
   @@map("workers")
 }
 
 model WorkerCategory {
-  workerId              Int
-  categoryId            Int
-  isPrimary             Boolean
-  experienceLevel       String   @db.VarChar(45)
-  hasCertificate        Boolean
-  isActive              Boolean
-  createdAt             DateTime @db.Timestamp
-  baseRate              Decimal  @db.Decimal(10, 2)
+  workerId        Int
+  categoryId      Int
+  isPrimary       Boolean
+  experienceLevel String   @db.VarChar(45)
+  hasCertificate  Boolean
+  isActive        Boolean
+  createdAt       DateTime @db.Timestamp
+  baseRate        Decimal  @db.Decimal(10, 2)
 
   // Relationships
   worker   Worker   @relation(fields: [workerId], references: [id])
@@ -101,10 +100,10 @@ model SponsorCategory {
 }
 
 model SponsorWorker {
-  sponsorId       Int
-  workerId        Int
-  linkDate        DateTime @default(now())
-  isActive        Boolean
+  sponsorId Int
+  workerId  Int
+  linkDate  DateTime @default(now())
+  isActive  Boolean
 
   // Relationships
   sponsor Sponsor @relation(fields: [sponsorId], references: [id])
@@ -115,13 +114,13 @@ model SponsorWorker {
 }
 
 model Sponsor {
-  id              Int    @id @default(autoincrement())
-  name            String @db.VarChar(45)
-  address         String @db.VarChar(45)
-  phone           Int
-  taxId           Int
-  businessName    String @db.VarChar(45)
-  registeredAt    DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  name         String   @db.VarChar(45)
+  address      String   @db.VarChar(45)
+  phone        Int
+  taxId        Int
+  businessName String   @db.VarChar(45)
+  registeredAt DateTime @default(now())
 
   // Relationships
   sponsorCategories SponsorCategory[]
@@ -132,13 +131,13 @@ model Sponsor {
 }
 
 model SponsorInventory {
-  sponsorId       Int
-  productId       Int
-  stock           Int
-  sellingPrice    Int
-  minSale         Int
-  maxSale         Int
-  saleUnit        String @db.VarChar(30)
+  sponsorId    Int
+  productId    Int
+  stock        Int
+  sellingPrice Int
+  minSale      Int
+  maxSale      Int
+  saleUnit     String @db.VarChar(30)
 
   // Relationships
   sponsor Sponsor @relation(fields: [sponsorId], references: [id])
@@ -149,11 +148,11 @@ model SponsorInventory {
 }
 
 model Product {
-  id          Int    @id @default(autoincrement())
-  name        String @db.VarChar(70)
-  brand       String @db.VarChar(45)
-  volume      Int
-  volumeUnit  String @db.VarChar(30)
+  id         Int    @id @default(autoincrement())
+  name       String @db.VarChar(70)
+  brand      String @db.VarChar(45)
+  volume     Int
+  volumeUnit String @db.VarChar(30)
 
   // Relationships
   sponsorInventory SponsorInventory[]
@@ -162,35 +161,36 @@ model Product {
 }
 
 model JobRequest {
-  id                        Int      @id @default(autoincrement())
-  serviceKey                String
-  title                     String   @db.VarChar(70)
-  urgency                   Boolean
-  jobCreationDate           DateTime @default(now())
-  date                      DateTime
-  description               String   @db.Text
-  address                   Json
-  propertyType              String
-  floor                     String?
-  aparmentNumber            String?
-  position                  Json
-  extraData                 Json?
-  photos                    Json?
+  id              Int      @id @default(autoincrement())
+  serviceKey      String
+  title           String   @db.VarChar(70)
+  urgency         Boolean
+  jobCreationDate DateTime @default(now())
+  date            DateTime
+  description     String   @db.Text
+  address         Json
+  propertyType    String
+  floor           String?
+  aparmentNumber  String?
+  position        Json
+  extraData       Json?
+  photos          Json?
 
-  user                      User     @relation(fields: [userId], references: [id])
-  userId                    Int
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
 
-  status                    Status   @relation(fields: [statusId], references: [id])
-  statusId                  Int
+  status   Status @relation(fields: [statusId], references: [id])
+  statusId Int
 
   @@map("job_requests")
 }
 
-model Status{
-  id  Int @id @default(autoincrement())
-  name String @db.VarChar(45)
+model Status {
+  id               Int      @id @default(autoincrement())
+  name             String   @db.VarChar(45) @unique
 
   jobRequests JobRequest[]
+
   @@map("statuses")
 }
 
