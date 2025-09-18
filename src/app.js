@@ -23,7 +23,7 @@ app.use('/users', userRouter);
 app.use('/auth', authRouter);
 app.use('/job-requests', jobRequestRouter);
 app.use('/workers', workerRouter);
-app.use('/sponsorts', sponsorRouter);
+app.use('/sponsors', sponsorRouter);
 
 
 
