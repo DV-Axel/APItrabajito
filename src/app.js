@@ -1,9 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import router, { userRouter } from './routes/user.routes.js';
-import authRouter from './routes/auth.routes.js';
+import { userRouter } from './routes/user.routes.js';
+import { authRouter } from './routes/auth.routes.js';
 import { jobRequestRouter } from './routes/job_request.routes.js';
+import { workerRouter } from './routes/worker.routes.js';
+import { sponsorRouter } from './routes/sponsor.routes.js';
 
 dotenv.config();
 
@@ -20,6 +22,8 @@ app.use('/images/jobRequests', express.static('public/images/jobRequests'));
 app.use('/users', userRouter);
 app.use('/auth', authRouter);
 app.use('/job-requests', jobRequestRouter);
+app.use('/workers', workerRouter);
+app.use('/sponsorts', sponsorRouter);
 
 
 
