@@ -39,8 +39,8 @@
    - cd <CARPETA_DEL_REPO>
    - Instalar dependencias: npm install
    - Crear el archivo .env en la raiz del proyecto
-      - DATABASE_URL:postgresql://postgres:TU_CONTRASEÑA@localhost:5432/trabajito_db?schema=public
-      - PORT:3000
+      - DATABASE_URL=postgresql://postgres:TU_CONTRASEÑA@localhost:5432/trabajito_db?schema=public
+      - PORT=3000
 
 
 5. Aplicar migraciones existentes

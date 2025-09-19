@@ -115,12 +115,24 @@ model SponsorWorker {
 
 model Sponsor {
   id           Int      @id @default(autoincrement())
-  name         String   @db.VarChar(45)
+  tradeName    String   @db.VarChar(45)
   address      String   @db.VarChar(45)
   phone        Int
-  taxId        Int
+  cuilId       Int
   businessName String   @db.VarChar(45)
   registeredAt DateTime @default(now())
+  email        String   @unique @db.VarChar(80)
+  alternativeEmail        String       @unique @db.VarChar(80)
+  contactName String    @db.VarChar(70)
+  aditionalInformation String?  @db.Text
+  logo         String?
+  companyRegistration String
+  social       Json?
+  workingHours Json?
+  workingDays  Json?
+
+
+
 
   // Relationships
   sponsorCategories SponsorCategory[]
