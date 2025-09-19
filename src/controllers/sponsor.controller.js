@@ -5,6 +5,7 @@ import fs from 'fs';
 import { deleteUploadedFiles } from "../utils/fileUtils.js";
 
 export const createSponsor = async (req, res) => {
+    
     try {
         console.log("Petición recibida");
         console.log("Body:", req.body);
