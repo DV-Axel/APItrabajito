@@ -1,4 +1,5 @@
 import { prisma } from "../data/prisma.js";
+import { deleteUploadedFiles } from "../utils/fileUtils.js";
 
 
 export const getAllUsers = async (req, res) => {
@@ -125,15 +126,6 @@ export const updateUser = async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
 export const updateProfilePicture = async (req, res) => {
     try {
         const { id } = req.params;
@@ -149,6 +141,9 @@ export const updateProfilePicture = async (req, res) => {
 
         res.json( { sucess: true, imagePath, user });
     } catch (error) {
+        if (req.file) {
+            deleteUploadedFiles([req.file]);
+        }
         res.status(500).json( { error: error.message });
     }
 }
