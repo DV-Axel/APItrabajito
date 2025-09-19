@@ -26,7 +26,7 @@ const fileFilter = ( req, file, cb ) => {
     if ( extname && mimetype ) {
         return cb(null, true);
     } else {
-        cb( new Error('Solo se permite imágenes con extensiones jps, jpeg, png o gif.'));
+        cb( new Error('Solo se permite imágenes con extensiones jpg, jpeg, png o gif.'));
     }
 };
 

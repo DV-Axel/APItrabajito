@@ -1,4 +1,6 @@
 import { prisma } from "../data/prisma.js";
+import { parseIfString } from "../data/helpers.js";
+import { deleteUploadedFiles } from "../utils/fileUtils.js";
 
 
 export const createJobRequest = async (req, res) => {
@@ -6,11 +8,6 @@ export const createJobRequest = async (req, res) => {
         console.log("Petición recibida");
         console.log("Body:", req.body);
         console.log("Files:", req.files); // Muestra los datos en consola
-
-        const parseIfString = ( data ) =>{
-            if (typeof data == 'string') return JSON.parse( data );
-            return data;
-        }
 
         const {
             serviceKey,
@@ -23,9 +20,7 @@ export const createJobRequest = async (req, res) => {
             userId
         } = req.body;
 
-        const numericServiceKey = Number(serviceKey);
-
-
+    
         // Parsear si vienen como string (form-data)
         const parsedForm = parseIfString(form);
         const parsedAddress = parseIfString(address);
@@ -57,9 +52,10 @@ export const createJobRequest = async (req, res) => {
         console.log("Antes de guardar en la DB");
         const jobRequest = await prisma.jobRequest.create({
             data: {
-                serviceKey: numericServiceKey,
+                serviceKey: Number(serviceKey),
                 title: parsedForm.titulo,
-                urgency: parsedForm.urgencia === "si" || parsedForm.urgencia === true ? true : false,                jobCreationDate: new Date(),
+                urgency: parsedForm.urgencia === "si" || parsedForm.urgencia === true ? true : false,                
+                jobCreationDate: new Date(),
                 date: new Date(parsedForm.fecha),
                 description: parsedForm.descripcion,
                 address: parsedAddress,
@@ -76,6 +72,7 @@ export const createJobRequest = async (req, res) => {
         console.log("Guardado en la DB:", jobRequest);
         res.status(200).json(jobRequest);
     } catch (error) {
+        deleteUploadedFiles(req.files);
         console.error("Error al crear JobRequest:", error);
         res.status(500).json({ error: "Imposible crear JobRequest" });
     }

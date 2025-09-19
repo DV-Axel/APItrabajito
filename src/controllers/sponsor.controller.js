@@ -2,9 +2,14 @@ import { prisma } from "../data/prisma.js";
 import {parseIfString} from "../data/helpers.js";
 import path from 'path';
 import fs from 'fs';
+import { deleteUploadedFiles } from "../utils/fileUtils.js";
 
 export const createSponsor = async (req, res) => {
     try {
+        console.log("Petición recibida");
+        console.log("Body:", req.body);
+        console.log("Files:", req.files); 
+
         const {
             businessName, tradeName, cuilId, address, contactName, phone,
             email, alternativeEmail, aditionalInformation, rubros,
@@ -17,27 +22,9 @@ export const createSponsor = async (req, res) => {
         const workingHoursParsed = parseIfString(workingHours);
         const socialParsed = parseIfString(social);
 
-        // Guardar archivos en carpetas específicas
-        const logoFile = req.files?.logo?.[0];
-        const companyRegFile = req.files?.companyRegistration?.[0];
-
-        let logoPath, companyRegPath;
-
-        // Guardar logo en images/profilePictureSponsor
-        if (logoFile) {
-            const logoDir = path.join('public', 'images', 'profilePictureSponsor');
-            if (!fs.existsSync(logoDir)) fs.mkdirSync(logoDir, { recursive: true });
-            logoPath = path.join(logoDir, `${Date.now()}_${logoFile.originalname}`);
-            fs.writeFileSync(logoPath, logoFile.buffer);
-        }
-
-        // Guardar companyRegistration en files/companyregistration
-        if (companyRegFile) {
-            const regDir = path.join('public', 'files', 'companyregistration');
-            if (!fs.existsSync(regDir)) fs.mkdirSync(regDir, { recursive: true });
-            companyRegPath = path.join(regDir, `${Date.now()}_${companyRegFile.originalname}`);
-            fs.writeFileSync(companyRegPath, companyRegFile.buffer);
-        }
+        // Rutas de archivos subidos
+        const logoPath = req.files?.logo?.[0]?.path?.replace(/\\/g, "/");
+        const companyRegPath = req.files?.companyRegistration?.[0]?.path?.replace(/\\/g, "/");
 
         // Guardar en la base de datos
         const sponsor = await prisma.sponsor.create({
@@ -75,6 +62,12 @@ export const createSponsor = async (req, res) => {
 
         res.status(201).json({ message: "Sponsor creado correctamente" });
     } catch (error) {
+        // Borrar archivos subidos si hay error
+        if (req.files) {
+            // Junta todos los archivos en un solo array
+            const allFIles = Object.values(req.files).flat();
+            deleteUploadedFiles(allFIles);
+        }
         console.error("Error al crear Sponsor:", error);
         res.status(500).json({ error: "Error al crear Sponsor" });
     }

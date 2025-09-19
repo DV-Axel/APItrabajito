@@ -115,30 +115,27 @@ model SponsorWorker {
 }
 
 model Sponsor {
-  id           Int      @id @default(autoincrement())
-  tradeName    String   @db.VarChar(45)
-  address      String   @db.VarChar(45)
-  phone        Int
-  cuilId       BigInt
-  businessName String   @db.VarChar(45)
-  registeredAt DateTime @default(now())
-  email        String   @unique @db.VarChar(80)
-  alternativeEmail        String       @unique @db.VarChar(80)
-  contactName String    @db.VarChar(70)
-  aditionalInformation String?  @db.Text
-  logo         String?
-  companyRegistration String
-  social       Json?
-  workingHours Json?
-  workingDays  Json?
-
-
-
+  id                    Int       @id @default(autoincrement())
+  tradeName             String    @db.VarChar(45)
+  address               String    @db.VarChar(45)
+  phone                 Int
+  cuilId                BigInt
+  businessName          String    @db.VarChar(45)
+  registeredAt          DateTime  @default(now())
+  email                 String    @unique @db.VarChar(80)
+  alternativeEmail      String    @unique @db.VarChar(80)
+  contactName           String    @db.VarChar(70)
+  aditionalInformation  String?   @db.Text
+  logo                  String?
+  companyRegistration   String
+  social                Json?
+  workingHours          Json?
+  workingDays           Json?
 
   // Relationships
-  sponsorCategories SponsorCategory[]
-  sponsorWorkers    SponsorWorker[]
-  inventory         SponsorInventory[]
+  sponsorCategories     SponsorCategory[]
+  sponsorWorkers        SponsorWorker[]
+  inventory             SponsorInventory[]
 
   @@map("sponsors")
 }
