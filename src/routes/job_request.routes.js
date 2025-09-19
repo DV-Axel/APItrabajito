@@ -7,7 +7,7 @@ import {
 } from "../controllers/job_request.controller.js";
 import { uploadJobRequestPhotos } from '../middlewares/images/updateJobRequestPhotos.js';
 import { validateSchema } from '../middlewares/validations/validateSchema.js';
-import { userIdSchema } from '../validations/user.validation.js';
+import { userIdSchema } from '../middlewares/validations/user.validation.js';
 
 export const jobRequestRouter = Router();
 

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import {deleteUser, getAllUsers, getUserById, setRequestService, updateProfilePicture, updateUser} from '../controllers/User.Controller.js'
 import { uploadProfilePictureMiddle } from '../middlewares/images/updateProfilePictureMiddle.js';
 import { validateSchema } from '../middlewares/validations/validateSchema.js';
-import { updateUserSchema, userIdSchema } from '../validations/user.validation.js';
+import { updateUserSchema, userIdSchema } from '../middlewares/validations/user.validation.js';
 
 export const userRouter = Router();
 
