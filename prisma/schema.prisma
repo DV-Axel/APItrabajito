@@ -76,13 +76,14 @@ model WorkerCategory {
 }
 
 model Category {
-  id          Int    @id @default(autoincrement())
-  name        String @db.VarChar(45)
-  description String @db.Text
+  id          Int          @id @default(autoincrement())
+  name        String       @db.VarChar(45)
+  description String       @db.Text
 
-  // Relationships
+  // Relaciones
   workerCategories  WorkerCategory[]
   sponsorCategories SponsorCategory[]
+  jobRequests       JobRequest[] @relation("CategoryToJobRequest")
 
   @@map("categories")
 }
@@ -118,7 +119,7 @@ model Sponsor {
   tradeName    String   @db.VarChar(45)
   address      String   @db.VarChar(45)
   phone        Int
-  cuilId       Int
+  cuilId       BigInt
   businessName String   @db.VarChar(45)
   registeredAt DateTime @default(now())
   email        String   @unique @db.VarChar(80)
@@ -174,7 +175,6 @@ model Product {
 
 model JobRequest {
   id              Int      @id @default(autoincrement())
-  serviceKey      String
   title           String   @db.VarChar(70)
   urgency         Boolean
   jobCreationDate DateTime @default(now())
@@ -193,6 +193,9 @@ model JobRequest {
 
   status   Status @relation(fields: [statusId], references: [id])
   statusId Int
+
+  service    Category @relation("CategoryToJobRequest", fields: [serviceKey], references: [id])
+  serviceKey Int
 
   @@map("job_requests")
 }

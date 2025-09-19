@@ -23,6 +23,9 @@ export const createJobRequest = async (req, res) => {
             userId
         } = req.body;
 
+        const numericServiceKey = Number(serviceKey);
+
+
         // Parsear si vienen como string (form-data)
         const parsedForm = parseIfString(form);
         const parsedAddress = parseIfString(address);
@@ -54,7 +57,7 @@ export const createJobRequest = async (req, res) => {
         console.log("Antes de guardar en la DB");
         const jobRequest = await prisma.jobRequest.create({
             data: {
-                serviceKey,
+                serviceKey: numericServiceKey,
                 title: parsedForm.titulo,
                 urgency: parsedForm.urgencia === "si" || parsedForm.urgencia === true ? true : false,                jobCreationDate: new Date(),
                 date: new Date(parsedForm.fecha),
