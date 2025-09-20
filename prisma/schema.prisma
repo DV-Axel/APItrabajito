@@ -42,13 +42,14 @@ model Worker {
   id             Int      @id @default(autoincrement())
   subtitle       String   @db.VarChar(100)
   description    String   @db.Text
-  workLocation   String   @db.VarChar(100)
-  workingDays    String   @db.VarChar(100)
-  workingHours   String   @db.VarChar(100)
-  rating         Decimal  @db.Decimal(3, 2)
-  jobsCompleted  Int
+  workLocation   Json
+  workingDays    Json
+  workingHours   Json
+  rating         Decimal  @db.Decimal(3, 2) @default(0)
+  jobsCompleted  Int      @default(0)
   profilePicture String   @db.VarChar(255)
   createdAt      DateTime @default(now())
+  extraData      Json?
 
   // Relaciones
   user   User   @relation(fields: [userId], references: [id])
@@ -64,12 +65,11 @@ model Worker {
 model WorkerCategory {
   workerId        Int
   categoryId      Int
-  isPrimary       Boolean
-  experienceLevel String   @db.VarChar(45)
-  hasCertificate  Boolean
-  isActive        Boolean
-  createdAt       DateTime @db.Timestamp
-  baseRate        Decimal  @db.Decimal(10, 2)
+  hasCertificate  Boolean   @default(false)
+  isActive        Boolean   @default(false)
+
+  createdAt DateTime @default(now()) @db.Timestamp
+
 
   // Relationships
   worker   Worker   @relation(fields: [workerId], references: [id])
@@ -108,7 +108,7 @@ model SponsorWorker {
   sponsorId Int
   workerId  Int
   linkDate  DateTime @default(now())
-  isActive  Boolean
+  isActive  Boolean  @default(false)
 
   // Relationships
   sponsor Sponsor @relation(fields: [sponsorId], references: [id])
