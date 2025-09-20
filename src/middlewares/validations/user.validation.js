@@ -60,6 +60,6 @@ export const createUserSchema = userSchema;
 export const updateUserSchema = userSchema.partial();
 
 // Para validar ID en params
-export const userIdSchema = z.object({
+export const idSchema = z.object({
     id: z.string().regex(/^\d+$/, "El ID debe ser un número"),
 });
