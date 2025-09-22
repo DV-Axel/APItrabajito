@@ -73,3 +73,44 @@ export const createSponsor = async (req, res) => {
         res.status(500).json({ error: "Error al crear Sponsor" });
     }
 }
+
+
+export const getSponsorFromFormWorker = async (req, res) => {
+    try {
+        const { cuit, nombre } = req.body;
+
+        let sponsor;
+        if (cuit) {
+            sponsor = await prisma.sponsor.findFirst({
+                where: { cuilId: BigInt(cuit) },
+                select: { id: true, tradeName: true, cuilId: true, address: true }
+
+            });
+
+        } else if (nombre) {
+            sponsor = await prisma.sponsor.findFirst({
+                where: { tradeName: nombre },
+                select: { id: true, tradeName: true, cuilId: true, address: true }
+
+            });
+        } else {
+            return res.status(400).json({ error: "Falta cuit o nombre" });
+        }
+
+        if (!sponsor) {
+            return res.status(404).json({ error: "Sponsor no encontrado" });
+        }
+
+        res.json({
+            id: sponsor.id,
+            nombre: sponsor.tradeName,
+            cuil: sponsor.cuilId.toString(),
+            direccion: sponsor.address
+        });
+
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+};

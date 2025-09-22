@@ -9,7 +9,7 @@ export const createWorker = async (req, res) => {
         console.log(req.body);
         console.log(req.files);
 
-        const { subtitle, description, idUser, workLocation, workingDays, workingHours, rubros, sponsor } = req.body;
+        const { subtitle, description, idUser, idSponsor, workLocation, workingDays, workingHours, rubros, sponsor } = req.body;
 
         // Guardar la imagen en disco
         const photoFile = req.files?.photo?.[0];
@@ -70,18 +70,17 @@ export const createWorker = async (req, res) => {
             });
         }
 
-        const temporalId = 2;
 
-        if (temporalId) {
+        if (idSponsor) {
             await prisma.sponsorWorker.create({
                 data: {
-                    sponsorId: temporalId,
+                    sponsorId: Number(idSponsor), // Conversión a número
                     workerId: worker.id,
-                    isActive: true // o false según tu lógica
-                    // linkDate se llena automáticamente por @default(now())
+                    isActive: true
                 }
             });
         }
+
 
 
         res.status(201).send("Worker creado exitosamente");
