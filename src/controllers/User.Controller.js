@@ -149,5 +149,38 @@ export const updateProfilePicture = async (req, res) => {
 }
 
 
+// para este metotdo es necesario agregar una columna en user (isActive), falta armar la ruta tambien
+export const desactivateAccount = async(req, res) => {
+    const { id } = req.params;
 
+    if (isNaN(id)) {
+        return res.status(400).json( { message: "El id debe ser un número válido"} )
+    };
 
+    try {
+
+        // Verifica si el usuario existe
+        const existingUser = await prisma.findUnique({ 
+            where: { id: Number(id) } 
+        });
+        if (!existingUser) {
+            return res.status(400).json({ message: "Usuario no encontrado" });
+        }
+
+        // Verifica si ya esta desactivado
+        if (!existingUser.isActive) {
+            return res.status(400).json({ message: "La cuenta ya está desactivada" });
+        }
+
+        const user = await prisma.user.update({ 
+            where: { id: Number(id) },
+            data: { isVerified: false } 
+        });
+        
+        res.status(200).json({ 
+            message: "Cuenta desactivada correctamente",
+            user });
+    } catch (error) {
+        res.status(500).json( { error: "Error al actualizar el stato", details: error.message });
+    }
+}
