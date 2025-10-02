@@ -12,6 +12,7 @@ export function validateSchema(schema, type = "body") {
         
         return res.status(400).json({
           success: false,
+          message: error.issues[0]?.message || "Error de validación",
           errors: error.issues.map(e => ({
             path: e.path.join("."), // ej: "email" o "password"
             message: e.message

@@ -70,7 +70,7 @@ export const signup = async(req, res) => {
                 
         } catch (error) {
             console.error("signup error:", error);
-            res.status(500).json({ message: "Error en el registro", error: error.message });
+            res.status(500).json({ message: "Error en el registro de usuario", error: error.message });
     }
 }
 
@@ -131,7 +131,7 @@ export const login = async(req, res) => {
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).json( { message: "Datos incorrectos" });
+            return res.status(400).json( { message: "Correo Electrónico o Password Incorrectos" });
         }
 
         const token = generateToken({ userId: user.id }, "2h");
@@ -202,6 +202,7 @@ export const forgotPassword = async(req, res) => {
 
         const resetToken = generateToken({ userId: user.id }, "15m");
         const resetUrl = `http://localhost:3000/auth/reset-password?token=${resetToken}`;
+        // const resetUrl = `RUTA AL FRONT`;
 
         await transporter.sendMail({
             from: "TRABAJITO APP",
@@ -226,11 +227,16 @@ export const forgotPassword = async(req, res) => {
 
 export const resetPassword = async(req, res) => {
     const { token } = req.query;
-    const { newPassword} = req.body;
+    const { newPassword, confirmPassword } = req.body;
 
     try {
         const decoded = verifyToken(token);
         const userId = decoded.userId;
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ message: "Las contraseñas no coinciden" })
+        }
+
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         await prisma.user.update({

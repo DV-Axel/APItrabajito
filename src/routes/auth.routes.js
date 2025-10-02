@@ -8,7 +8,7 @@ import {
   resetPassword 
 } from "../controllers/auth.controller.js";
 import { validateSchema } from '../middlewares/validations/validateSchema.js';
-import { createUserSchema } from '../middlewares/validations/user.validation.js';
+import { createUserSchema, loginSchema } from '../middlewares/validations/user.validation.js';
 
 
 export const authRouter = Router();
@@ -19,7 +19,7 @@ authRouter.post("/signup", validateSchema(createUserSchema) ,signup);
 // Confirmación de email
 authRouter.get("/confirm", confirmEmail);
 // Login
-authRouter.post("/login", login);
+authRouter.post("/login", validateSchema(loginSchema), login);
 
 authRouter.post("/resend-confirmation", resendConfirmation);
 
