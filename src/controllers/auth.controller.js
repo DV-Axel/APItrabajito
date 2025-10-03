@@ -136,10 +136,16 @@ export const login = async(req, res) => {
 
         const token = generateToken({ userId: user.id }, "2h");
 
+        // Esto es para que asocie si es worker o no
+        const worker = await prisma.worker.findUnique({
+            where: { userId: user.id }
+        });
+        const isWorker = !!worker;
+
         res.status(200).json({
             message: "Login exitoso",
             token,
-            user: { id: user.id, email: user.email, nombre: user.firstName, apellido: user.lastName },
+            user: { id: user.id, email: user.email, nombre: user.firstName, apellido: user.lastName, isWorker },
         });
         console.log(user);
         

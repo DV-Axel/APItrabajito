@@ -84,10 +84,12 @@ model Category {
   name        String       @db.VarChar(45)
   description String       @db.Text
 
+
   // Relaciones
   workerCategories  WorkerCategory[]
   sponsorCategories SponsorCategory[]
   jobRequests       JobRequest[] @relation("CategoryToJobRequest")
+
 
   @@map("categories")
 }
