@@ -97,6 +97,12 @@ export const idSchema = z.object({
     }).regex(/^\d+$/, "El ID debe ser un número"),
 });
 
+export const statusIdSchema = z.object({
+    statusId: z.string({
+        required_error: "El statusId es obligatorio"
+    }).regex(/^\d+$/, "El statusId debe ser un número"),
+});
+
 
 export const loginSchema = z.object({
     email: z.string({
