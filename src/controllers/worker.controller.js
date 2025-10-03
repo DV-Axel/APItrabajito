@@ -89,3 +89,47 @@ export const createWorker = async (req, res) => {
         res.status(500).send({ message: "Error interno del servidor" });
     }
 }
+
+
+
+
+export const getServicesByCategory = async (req, res) => {
+    const {id} = req.params;
+
+    try{
+        //Secuencia para traer los servicios del rubro del worker
+        // 1. Verificar que el usuario es un worker
+        const worker = await prisma.worker.findUnique({
+            where: { userId: Number(id) }
+        });
+
+        if (!worker) {
+            return res.status(404).json({ message: "El usuario no es un worker" });
+        }
+
+        // 2. Obtener los rubros (categorías) del worker
+        const workerCategories = await prisma.workerCategory.findMany({
+            where: { workerId: worker.id },
+            select: { categoryId: true }
+        });
+        const categoryIds = workerCategories.map(wc => wc.categoryId);
+
+        if (categoryIds.length === 0) {
+            return res.status(200).json([]); // No tiene rubros asignados
+        }
+
+
+        // 3. Buscar las solicitudes (JobRequest) que coincidan con los rubros
+        const jobRequests = await prisma.jobRequest.findMany({
+            where: {
+                serviceKey: { in: categoryIds }
+            }
+        });
+
+        console.log(jobRequests);
+
+        res.status(200).json(jobRequests);
+    }catch(error){
+        res.status(500).send({ message: "Error interno del servidor" });
+    }
+}

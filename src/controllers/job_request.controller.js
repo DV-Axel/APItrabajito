@@ -100,7 +100,7 @@ export const getJobRequestById = async (req, res) => {
         const { id } = req.params;
         const jobRequest = await prisma.jobRequest.findUnique({
             where: { id: Number(id) },
-            include: { user: true }
+            include: { user: true, service: true }
         });
         if (!jobRequest) {
             return res.status(404).json({ error: 'JobRequest no encontrado' });
