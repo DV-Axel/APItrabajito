@@ -11,6 +11,8 @@ export const createWorker = async (req, res) => {
 
         const { subtitle, description, idUser, idSponsor, workLocation, workingDays, workingHours, rubros, sponsor } = req.body;
 
+
+        // TODO: Revisar que no se guarde primero la foto y despues se rechace
         // Guardar la imagen en disco
         const photoFile = req.files?.photo?.[0];
         let photoPath = null;
@@ -70,7 +72,9 @@ export const createWorker = async (req, res) => {
             });
         }
 
+        
 
+        //Creacion del Worker
         if (idSponsor) {
             await prisma.sponsorWorker.create({
                 data: {
