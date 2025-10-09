@@ -138,35 +138,4 @@ export const getServicesByCategory = async (req, res) => {
     }
 }
 
-// src/controllers/worker.controller.js
-export const checkPostulation = async (req, res) => {
-    try {
-        const { idUser, idJobRequest } = req.query;
 
-        if (!idUser || !idJobRequest) {
-            return res.status(400).json({ error: "Faltan parámetros" });
-        }
-
-        // Buscar el workerId correspondiente al idUser
-        const worker = await prisma.worker.findUnique({
-            where: { userId: Number(idUser) }
-        });
-
-        if (!worker) {
-            return res.status(404).json({ error: "El usuario no es un worker" });
-        }
-
-        // Buscar si existe una postulación (Application)
-        const postulado = await prisma.application.findFirst({
-            where: {
-                workerId: worker.id,
-                jobRequestId: Number(idJobRequest)
-            }
-        });
-
-        // Devuelve true si existe, false si no
-        res.status(200).json({ yaPostulado: !!postulado });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};

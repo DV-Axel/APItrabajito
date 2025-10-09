@@ -1,11 +1,11 @@
 import { Router } from "express";
 import {
-    cancelJobRequest,
     createJobRequest,
     getAllJobRequests,
     getJobRequestById,
     getJobRequestsByUserId,
-    setPostulation
+    setPostulation,
+    checkPostulation
 } from "../controllers/job_request.controller.js";
 import { uploadJobRequestPhotos } from '../middlewares/images/updateJobRequestPhotos.js';
 import { validateSchema } from '../middlewares/validations/validateSchema.js';
@@ -15,6 +15,7 @@ export const jobRequestRouter = Router();
 
 
 jobRequestRouter.post('/', uploadJobRequestPhotos.array('photos'), createJobRequest);
+jobRequestRouter.get('/check-postulacion', checkPostulation);
 jobRequestRouter.get("/:id", validateSchema(idSchema, "params"), getJobRequestsByUserId);
 jobRequestRouter.get("/detalle/:id", getJobRequestById);
 jobRequestRouter.post("/postularse", setPostulation);

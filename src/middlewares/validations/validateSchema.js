@@ -3,6 +3,8 @@ import { ZodError } from "zod";
 
 export function validateSchema(schema, type = "body") {
   return (req, res, next) => {
+    console.log("body recidibido:", req[type]);
+    
     try {
       req[type] = schema.parse(req[type] ?? {});
       next();
