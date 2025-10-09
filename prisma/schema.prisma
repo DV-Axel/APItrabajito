@@ -57,6 +57,7 @@ model Worker {
 
   workerCategories WorkerCategory[]
   sponsorWorkers   SponsorWorker[]
+  applications Application[]
 
   @@map("workers")
 }
@@ -200,6 +201,8 @@ model JobRequest {
   service    Category @relation("CategoryToJobRequest", fields: [serviceKey], references: [id])
   serviceKey Int
 
+  applications Application[]
+
   @@map("job_requests")
 }
 
@@ -212,23 +215,24 @@ model Status {
   @@map("statuses")
 }
 
-// model Application {
-//   id                Int      @id @default(autoincrement())
-//   jobRequestId      Int
-//   workerId          Int
-//   submittedAt       DateTime @db.Date
-//   budget            Int
-//   description       String   @db.Text
-//   materials         String   @db.VarChar(255)
-//   budgetFile        String   @db.VarChar(255)
-//   visitDate         DateTime @db.Date
+ model Application {
+   id                Int      @id @default(autoincrement())
+   submittedAt       DateTime @default(now())
+   budget            Int
+   description       String   @db.Text
+   requireVisit     Boolean
 
-//   // Relationships
-//   jobRequest JobRequest @relation(fields: [jobRequestId], references: [id])
-//   worker     Worker     @relation(fields: [workerId], references: [id])
+   // Relationships
+   jobRequestId      Int
+   workerId          Int
 
-//   @@map("applications")
-// }
+   jobRequest JobRequest @relation(fields: [jobRequestId], references: [id])
+   worker     Worker     @relation(fields: [workerId], references: [id])
+
+
+
+   @@map("applications")
+ }
 
 // model JobRequestStatus {
 //   id   Int    @id @default(autoincrement())

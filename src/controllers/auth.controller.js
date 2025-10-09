@@ -22,11 +22,32 @@ export const signup = async(req, res) => {
             postalCode,
             idType,
             } = req.body;
+
+
+        //TODO: ver si las validaciones se pueden hacer con algun paquete externo
+        //Etapa de validaciones
+        // Validar que el usuario sea mayor de 18 años
+        const birth = new Date(birthDate);
+        const today = new Date();
+        const age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (age < 18 || (age === 18 && m < 0) || (age === 18 && m === 0 && today.getDate() < birth.getDate())) {
+            return res.status(400).json({ message: "Debes ser mayor de 18 años para registrarte" });
+        }
             
         // Verificar si el usuario existe
         const existingUser = await prisma.user.findUnique({ where: { email } });
         if ( existingUser ) {
             return res.status(400).json({ message: "El email ya está registrado" });
+        }
+
+        // Validar que el correo no esté registrado como sponsor
+        const existingSponsor = await prisma.sponsor.findUnique({
+            where: { alternativeEmail: email }
+        });
+
+        if (existingSponsor) {
+            return res.status(400).json({ message: "El correo ya está registrado como sponsor" });
         }
 
         // Hashea la constraseña

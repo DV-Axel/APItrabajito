@@ -133,6 +133,7 @@ export const getJobRequestsByUserId = async (req, res) => {
     } catch (error) {
         res.status(500).json( { error: error.message } );
     }
+<<<<<<< HEAD
 };
 
 
@@ -267,3 +268,47 @@ export const getJobRequestByServiceKey = async (req, res) => {
         res.status(500).json({ error: 'Error al obtener los servicios' })
     }
 };
+=======
+}
+
+export const setPostulation = async (req, res) => {
+    const {idJobRequest, presupuesto, presentacion, requiereVisita, idUser} = req.body;
+
+    try {
+
+        if (!idJobRequest || !presupuesto || !presentacion || !idUser) {
+            return res.status(400).json({ error: 'Faltan datos obligatorios' });
+        }
+
+        // Busca el worker por el idUser
+        const worker = await prisma.worker.findUnique({
+            where: { userId: Number(idUser) }
+        });
+
+        if (!worker) {
+            return res.status(404).json({ error: 'No se encontró un trabajador para el usuario indicado' });
+        }
+
+        // Crea la postulación
+        const application = await prisma.application.create({
+            data: {
+                jobRequestId: Number(idJobRequest),
+                workerId: worker.id,
+                budget: Number(presupuesto),
+                description: presentacion,
+                requireVisit: Boolean(requiereVisita)
+            }
+        });
+
+
+        res.status(200).json('Postulación recibida');
+    }catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+
+}
+
+
+
+
+>>>>>>> c1f2e689e45db5e41388365d4bea5bb1b64dc8ab

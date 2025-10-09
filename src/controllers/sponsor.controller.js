@@ -27,6 +27,19 @@ export const createSponsor = async (req, res) => {
         const logoPath = req.files?.logo?.[0]?.path?.replace(/\\/g, "/");
         const companyRegPath = req.files?.companyRegistration?.[0]?.path?.replace(/\\/g, "/");
 
+        // Validar que el sponsor no esté registrado como usuario
+        const existingUser = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: email },
+                    { email: alternativeEmail }
+                ]
+            }
+        });
+        if (existingUser) {
+            return res.status(400).json({ message: "El correo ya está registrado como usuario" });
+        }
+
         // Guardar en la base de datos
         const sponsor = await prisma.sponsor.create({
             data: {
