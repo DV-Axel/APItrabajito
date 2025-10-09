@@ -133,7 +133,6 @@ export const getJobRequestsByUserId = async (req, res) => {
     } catch (error) {
         res.status(500).json( { error: error.message } );
     }
-<<<<<<< HEAD
 };
 
 
@@ -268,8 +267,7 @@ export const getJobRequestByServiceKey = async (req, res) => {
         res.status(500).json({ error: 'Error al obtener los servicios' })
     }
 };
-=======
-}
+
 
 export const setPostulation = async (req, res) => {
     const {idJobRequest, presupuesto, presentacion, requiereVisita, idUser} = req.body;
@@ -311,4 +309,3 @@ export const setPostulation = async (req, res) => {
 
 
 
->>>>>>> c1f2e689e45db5e41388365d4bea5bb1b64dc8ab
