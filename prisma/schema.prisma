@@ -217,15 +217,19 @@ model Status {
 
  model Application {
    id                Int      @id @default(autoincrement())
-   jobRequestId      Int
-   workerId          Int
    submittedAt       DateTime @default(now())
    budget            Int
    description       String   @db.Text
+   requireVisit     Boolean
 
    // Relationships
+   jobRequestId      Int
+   workerId          Int
+
    jobRequest JobRequest @relation(fields: [jobRequestId], references: [id])
    worker     Worker     @relation(fields: [workerId], references: [id])
+
+
 
    @@map("applications")
  }
