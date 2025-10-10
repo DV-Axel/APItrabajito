@@ -5,9 +5,7 @@ import { deleteUploadedFiles } from "../utils/fileUtils.js";
 
 export const createJobRequest = async (req, res) => {
     try {
-        console.log("Petición recibida");
-        console.log("Body:", req.body);
-        console.log("Files:", req.files); // Muestra los datos en consola
+
 
         const {
             serviceKey,
@@ -49,7 +47,6 @@ export const createJobRequest = async (req, res) => {
         delete extraData.fecha;
         delete extraData.descripcion;
 
-        console.log("Antes de guardar en la DB");
         const jobRequest = await prisma.jobRequest.create({
             data: {
                 serviceKey: Number(serviceKey),
@@ -69,7 +66,6 @@ export const createJobRequest = async (req, res) => {
                 statusId: 1
             }
         });
-        console.log("Guardado en la DB:", jobRequest);
         res.status(200).json(jobRequest);
     } catch (error) {
         deleteUploadedFiles(req.files);
@@ -201,6 +197,62 @@ export const checkPostulation = async (req, res) => {
 
         // Devuelve true si existe, false si no
         res.status(200).json({ yaPostulado: !!postulado });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+export const getAplicationsByJobRequestId = async (req, res) => {
+    try {
+        const { jobRequestId } = req.query;
+
+        if (!jobRequestId) {
+            return res.status(400).json({ error: "Falta el parámetro jobRequestId" });
+        }
+
+        const applications = await prisma.application.findMany({
+            where: { jobRequestId: Number(jobRequestId) },
+            include: {
+                worker: {
+                    include: {
+                        user: true
+                    }
+                }
+            }
+        });
+
+        res.status(200).json(applications);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+export const getAplicationById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({ error: "Falta el parámetro id" });
+        }
+
+        const application = await prisma.application.findUnique({
+            where: { id: Number(id) },
+            include: {
+                worker: {
+                    include: {
+                        user: true
+                    }
+                }
+            }
+        });
+
+        if (!application) {
+            return res.status(404).json({ error: "Postulación no encontrada" });
+        }
+
+        res.status(200).json(application);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

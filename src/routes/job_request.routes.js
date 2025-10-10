@@ -5,7 +5,9 @@ import {
     getJobRequestById,
     getJobRequestsByUserId,
     setPostulation,
-    checkPostulation
+    checkPostulation,
+    getAplicationsByJobRequestId,
+    getAplicationById
 } from "../controllers/job_request.controller.js";
 import { uploadJobRequestPhotos } from '../middlewares/images/updateJobRequestPhotos.js';
 import { validateSchema } from '../middlewares/validations/validateSchema.js';
@@ -16,9 +18,12 @@ export const jobRequestRouter = Router();
 
 jobRequestRouter.post('/', uploadJobRequestPhotos.array('photos'), createJobRequest);
 jobRequestRouter.get('/check-postulacion', checkPostulation);
-jobRequestRouter.get("/:id", validateSchema(idSchema, "params"), getJobRequestsByUserId);
-jobRequestRouter.get("/detalle/:id", getJobRequestById);
+jobRequestRouter.get("/detalle/:id", getJobRequestById); // Detalle de una solicitud de servicio
 jobRequestRouter.post("/postularse", setPostulation);
+jobRequestRouter.get("/postulaciones-workers", getAplicationsByJobRequestId); // Obtener las postulaciones de una solicitud de servicio
+jobRequestRouter.get("/postulacion-worker/:id", getAplicationById); // Obtener una postulacion por su id
+jobRequestRouter.get("/:id", validateSchema(idSchema, "params"), getJobRequestsByUserId);
+
 
 
 jobRequestRouter.get("/", getAllJobRequests); // Para verificar todos los jobRequest, SOLO PRUEBA

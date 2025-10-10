@@ -17,6 +17,7 @@ app.use(express.json());
 
 
 app.use('/images/profilePicture', express.static('public/images/profilePicture'));
+app.use('/images/profilePictureWorker', express.static('public/images/profilePictureWorker'));
 app.use('/images/jobRequests', express.static('public/images/jobRequests'));
 app.use('/images/profilePictureSponsor', express.static('public/images/profilePictureSponsor'));
 app.use('/files/companyRegistration', express.static('public/files/companyRegistration'));
