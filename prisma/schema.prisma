@@ -127,7 +127,7 @@ model Sponsor {
   tradeName             String    @db.VarChar(45)
   address               String    @db.VarChar(45)
   phone                 Int
-  cuilId                BigInt
+  cuilId                BigInt    @unique
   businessName          String    @db.VarChar(45)
   registeredAt          DateTime  @default(now())
   email                 String    @unique @db.VarChar(80)
@@ -192,6 +192,7 @@ model JobRequest {
   position        Json
   extraData       Json?
   photos          Json?
+  isVisible       Boolean  @default(true)
 
   user   User @relation(fields: [userId], references: [id])
   userId Int
@@ -202,10 +203,14 @@ model JobRequest {
   service    Category @relation("CategoryToJobRequest", fields: [serviceKey], references: [id])
   serviceKey Int
 
-  applications Application[]
+  applicationSelected   Application? @relation("SelectedApplication", fields: [applicationSelectedId], references: [id])
+  applicationSelectedId Int? @unique
+
+  applications Application[] @relation("JobRequestApplications")
 
   @@map("job_requests")
 }
+
 
 model Status {
   id               Int      @id @default(autoincrement())
@@ -216,24 +221,24 @@ model Status {
   @@map("statuses")
 }
 
- model Application {
-   id                Int      @id @default(autoincrement())
-   submittedAt       DateTime @default(now())
-   budget            Int
-   description       String   @db.Text
-   requireVisit     Boolean
+model Application {
+  id                Int      @id @default(autoincrement())
+  submittedAt       DateTime @default(now())
+  budget            Int
+  description       String   @db.Text
+  requireVisit      Boolean
 
-   // Relationships
-   jobRequestId      Int
-   workerId          Int
+  jobRequestId      Int
+  workerId          Int
 
-   jobRequest JobRequest @relation(fields: [jobRequestId], references: [id])
-   worker     Worker     @relation(fields: [workerId], references: [id])
+  jobRequest JobRequest @relation("JobRequestApplications", fields: [jobRequestId], references: [id])
+  worker     Worker     @relation(fields: [workerId], references: [id])
 
+  selectedByJobRequest JobRequest? @relation("SelectedApplication")
 
+  @@map("applications")
+}
 
-   @@map("applications")
- }
 
 // model JobRequestStatus {
 //   id   Int    @id @default(autoincrement())
