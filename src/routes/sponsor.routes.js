@@ -6,6 +6,7 @@ import {uploadSponsorFiles} from '../middlewares/files/uploadSponsorFiles.js';
 export const sponsorRouter = Router();
 
 sponsorRouter.post('/', uploadSponsorFiles, createSponsor);
-sponsorRouter.post('/getSponsorFromFormWorker', getSponsorFromFormWorker)
+sponsorRouter.post('/getSponsorFromFormWorker', getSponsorFromFormWorker);
+
 
 export default sponsorRouter

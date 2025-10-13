@@ -184,3 +184,22 @@ export const desactivateAccount = async(req, res) => {
         res.status(500).json( { error: "Error al actualizar el stato", details: error.message });
     }
 }
+
+export const selectWorker = async (req, res) => {
+    const { jobRequestId, postulationId } = req.body;
+
+    if (!jobRequestId || !postulationId) {
+        return res.status(400).json({ error: "Faltan datos requeridos" });
+    }
+
+    try {
+        const jobRequest = await prisma.jobRequest.update({
+            where: { id: Number(jobRequestId) },
+            data: { applicationSelectedId: Number(postulationId) }
+        });
+
+        res.status(200).json({ message: "Postulación seleccionada correctamente", jobRequest });
+    } catch (error) {
+        res.status(500).json({ error: "Error al seleccionar la postulación", details: error.message });
+    }
+};
