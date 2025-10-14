@@ -64,3 +64,8 @@
 
 8. Para actualilzar modificaciones en esquema-prisma: npx prisma migrate dev
    Para ejecutar el SEED cadaz vez que crees la db o corras una migración: npx prisma db seed
+
+
+
+Para Supabase, instalar el cliente de supabase en el proyecto
+9. npm install @supabase/supabase-js

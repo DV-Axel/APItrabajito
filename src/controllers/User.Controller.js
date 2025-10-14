@@ -1,5 +1,6 @@
 import { prisma } from "../data/prisma.js";
 import { deleteUploadedFiles } from "../utils/fileUtils.js";
+import { uploadToSupabase } from "../utils/updateToSupabase.js";
 
 
 export const getAllUsers = async (req, res) => {
@@ -132,14 +133,23 @@ export const updateProfilePicture = async (req, res) => {
         if (!req.file) {
             return res.status(400).json( { error: 'No se subió ninguna imagen' } );
         }
-        const imagePath = `/images/profilePicture/${req.file.filename}`;
+        //const imagePath = `/images/profilePicture/${req.file.filename}`;
         
+        // Subir imagen a Supabase Storage usando la funcion utilitaria
+
+        const imageUrl = await uploadToSupabase({
+            bucket: 'profile-pictures',
+            filePath: req.file.path,
+            destinationPath: `${id}/${req.file.filename}`,
+            mimetype: req.file.mimetype
+        })
+
         const user = await prisma.user.update({
             where: { id: Number(id) },
-            data: { profilePicture: imagePath }
+            data: { profilePicture: imageUrl }
         }); 
 
-        res.json( { sucess: true, imagePath, user });
+        res.json( { sucess: true, imageUrl, user });
     } catch (error) {
         if (req.file) {
             deleteUploadedFiles([req.file]);

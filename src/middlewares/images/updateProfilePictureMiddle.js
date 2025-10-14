@@ -3,30 +3,30 @@ import path from 'path';
 import fs from 'fs';
 
 const rootPath = path.resolve();
-const profileFolder = path.join(rootPath, 'public/images/profilePicture');
+const tmpFolder = path.join(rootPath, 'public', 'images', 'tmp');
 
-if( !fs.existsSync( profileFolder )){
-    fs.mkdirSync( profileFolder, { recursive: true } );
+if (!fs.existsSync(tmpFolder)) {
+    fs.mkdirSync(tmpFolder, { recursive: true });
 }
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb( null, profileFolder );
+        cb(null, tmpFolder);
     },
     filename: (req, file, cb) => {
-        cb( null, Date.now() + '-' + file.originalname );
+        cb(null, Date.now() + '-' + file.originalname);
     }
-});
+ });
 
-const fileFilter = ( req, file, cb ) => {
+const fileFilter = (req, file, cb) => {
     const allowedTypes = /jpg|jpeg|png|gif/;
-    const extname = allowedTypes.test(path.extname( file.originalname ).toLowerCase());
-    const mimetype = allowedTypes.test( file.mimetype );
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
 
-    if ( extname && mimetype ) {
+    if (extname && mimetype) {
         return cb(null, true);
     } else {
-        cb( new Error('Solo se permite imágenes con extensiones jpg, jpeg, png o gif.'));
+        cb(new Error('Solo se permite imágenes con extensiones jpg, jpeg, png o gif'))
     }
 };
 
@@ -35,3 +35,38 @@ export const uploadProfilePictureMiddle = multer({
     limits: { fileSize: 50 * 1024 * 1024 },
     fileFilter
 });
+
+
+// const rootPath = path.resolve();
+// const profileFolder = path.join(rootPath, 'public/images/profilePicture');
+
+// if( !fs.existsSync( profileFolder )){
+//     fs.mkdirSync( profileFolder, { recursive: true } );
+// }
+
+// const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         cb( null, profileFolder );
+//     },
+//     filename: (req, file, cb) => {
+//         cb( null, Date.now() + '-' + file.originalname );
+//     }
+// });
+
+// const fileFilter = ( req, file, cb ) => {
+//     const allowedTypes = /jpg|jpeg|png|gif/;
+//     const extname = allowedTypes.test(path.extname( file.originalname ).toLowerCase());
+//     const mimetype = allowedTypes.test( file.mimetype );
+
+//     if ( extname && mimetype ) {
+//         return cb(null, true);
+//     } else {
+//         cb( new Error('Solo se permite imágenes con extensiones jpg, jpeg, png o gif.'));
+//     }
+// };
+
+// export const uploadProfilePictureMiddle = multer({
+//     storage,
+//     limits: { fileSize: 50 * 1024 * 1024 },
+//     fileFilter
+// });
