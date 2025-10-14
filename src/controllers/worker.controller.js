@@ -2,31 +2,46 @@ import { prisma } from "../data/prisma.js";
 import { parseIfString } from "../data/helpers.js";
 import path from 'path';
 import fs from 'fs';
+import { uploadToSupabase } from "../utils/updateToSupabase.js";
+import { supabase } from "../utils/supabaseClient.js";
 
 
 export const createWorker = async (req, res) => {
+
+    let destinationPath = null;
     try {
         console.log(req.body);
-        console.log(req.files);
+        console.log(req.file);
 
         const { subtitle, description, idUser, idSponsor, workLocation, workingDays, workingHours, rubros, sponsor } = req.body;
 
 
         // TODO: Revisar que no se guarde primero la foto y despues se rechace
         // Guardar la imagen en disco
-        const photoFile = req.files?.photo?.[0];
-        let photoPath = null;
-        if (photoFile) {
-            const uploadDir = path.join(process.cwd(), "public/images/profilePictureWorker");
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
-            const fileName = Date.now() + "-" + photoFile.originalname;
-            const fullPath = path.join(uploadDir, fileName);
-            fs.writeFileSync(fullPath, photoFile.buffer);
-            // Ruta relativa para guardar en la base de datos
-            photoPath = `images/profilePictureWorker/${fileName}`;
-        }
+        // const photoFile = req.files?.photo?.[0];
+        // let photoPath = null;
+        // if (photoFile) {
+        //     const uploadDir = path.join(process.cwd(), "public/images/profilePictureWorker");
+        //     if (!fs.existsSync(uploadDir)) {
+        //         fs.mkdirSync(uploadDir, { recursive: true });
+        //     }
+        //     const fileName = Date.now() + "-" + photoFile.originalname;
+        //     const fullPath = path.join(uploadDir, fileName);
+        //     fs.writeFileSync(fullPath, photoFile.buffer);
+        //     // Ruta relativa para guardar en la base de datos
+        //     photoPath = `images/profilePictureWorker/${fileName}`;
+        // }
+
+        destinationPath = `${idUser}-${Date.now()}/${req.file.filename}`;
+
+        const imageUrl = await uploadToSupabase({
+            bucket:'profile-pictures-worker',
+            filePath: req.file.path,
+            destinationPath,
+            mimetype: req.file.mimetype
+        })
+
+
 
         // Parseo si vienen como string (form-data)
         const workLocationParsed = parseIfString(workLocation);
@@ -49,7 +64,8 @@ export const createWorker = async (req, res) => {
             data: {
                 user: { connect: { id: Number(idUser) } },
                 description,
-                profilePicture: photoPath,
+                //profilePicture: photoPath,
+                profilePicture: imageUrl,
                 subtitle,
                 extraData,
                 workLocation: workLocationParsed,
@@ -90,6 +106,14 @@ export const createWorker = async (req, res) => {
         res.status(201).send("Worker creado exitosamente");
     } catch (error) {
         console.error(error);
+
+        // Si la foto se subió pero la creación falló, intenta borrarla
+        if (destinationPath) {
+            await supabase.storage
+                .from('profile-pictures-worker')
+                .remove([destinationPath]);
+        }
+
         res.status(500).send({ message: "Error interno del servidor" });
     }
 }
