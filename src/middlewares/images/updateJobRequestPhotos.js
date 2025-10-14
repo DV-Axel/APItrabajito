@@ -3,7 +3,8 @@ import path from 'path';
 import fs from 'fs';
 
 const rootPath = path.resolve();
-const jobRequestsFolder = path.join(rootPath, 'public/images/jobRequests');
+const jobRequestsFolder = path.join(rootPath, 'public', 'images', 'jobRequests', 'tmp');
+//const jobRequestsFolder = path.join(rootPath, 'public/images/jobRequests');
 
 if( !fs.existsSync( jobRequestsFolder )){
     fs.mkdirSync( jobRequestsFolder, { recursive: true } );

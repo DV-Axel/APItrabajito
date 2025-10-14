@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 
 const rootPath = path.resolve();
-const tmpFolder = path.join(rootPath, 'public', 'images', 'tmp');
+const tmpFolder = path.join(rootPath, 'public', 'images', 'profilePicture', 'tmp');
 
 if (!fs.existsSync(tmpFolder)) {
     fs.mkdirSync(tmpFolder, { recursive: true });

@@ -1,6 +1,7 @@
 import { prisma } from "../data/prisma.js";
 import { parseIfString } from "../data/helpers.js";
 import { deleteUploadedFiles } from "../utils/fileUtils.js";
+import { uploadToSupabase } from "../utils/updateToSupabase.js";
 
 
 export const createJobRequest = async (req, res) => {
@@ -30,11 +31,25 @@ export const createJobRequest = async (req, res) => {
             let notes = req.body.notes || [];
             if(!Array.isArray(notes)) notes = [notes];
 
-            photos = req.files.map( (file, index) => ({
-                name: file.originalname,
-                url: `/images/jobRequests/${file.filename}`,
-                note: notes[index] || ''
+            photos = await Promise.all(req.files.map(async (file, index) => {
+                const imageUrl = await uploadToSupabase({
+                    bucket: 'job-requests',
+                    filePath: file.path,
+                    destinationPath: `${userId}/${Date.now()}-${file.originalname}`,
+                    mimetype: file.mimetype
+                });
+                return {
+                    name: file.originalname,
+                    url: imageUrl,
+                    note: notes[index] || ''
+                };
             }));
+
+            // photos = req.files.map( (file, index) => ({
+            //     name: file.originalname,
+            //     url: `/images/jobRequests/${file.filename}`,
+            //     note: notes[index] || ''
+            // }));
 
         } else if (req.body.photos){
             // Si el fronten envia un array de fotos como JSON string
