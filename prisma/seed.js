@@ -142,6 +142,31 @@ for (const sponsor of sponsors) {
     });
 }
 
+
+// Relacionar sponsors con categorías
+const sponsorCategories = [
+    { sponsorId: 1, categoryId: 6 },  // Electricidad Sur → Electricidad
+    { sponsorId: 2, categoryId: 14 }, // Plomería Express → Plomería
+    { sponsorId: 3, categoryId: 8 },  // Jardines Verdes → Jardinería
+    { sponsorId: 4, categoryId: 11 }, // Mudanzas Rápidas → Mudanzas
+    { sponsorId: 5, categoryId: 13 }, // Pinturas del Sur → Pintura
+];
+
+for (const sc of sponsorCategories) {
+    await prisma.sponsorCategory.upsert({
+        where: {
+            sponsorId_categoryId: {
+                sponsorId: sc.sponsorId,
+                categoryId: sc.categoryId
+            }
+        },
+        update: {},
+        create: sc,
+    });
+}
+
+
+
 (async () =>{
     try {
         await main();

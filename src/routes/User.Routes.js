@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import {deleteUser, getAllUsers, getUserById, setRequestService, updateProfilePicture, updateUser, selectWorker} from '../controllers/user.controller.js'
+import {deleteUser, getAllUsers, getUserById, setRequestService, updateProfilePicture, updateUser, selectWorker} from './../controllers/User.Controller.js'
 import { uploadProfilePictureMiddle } from '../middlewares/images/updateProfilePictureMiddle.js';
 import { validateSchema } from '../middlewares/validations/validateSchema.js';
 import { updateUserSchema, idSchema } from '../middlewares/validations/user.validation.js';

@@ -61,19 +61,18 @@ export const createSponsor = async (req, res) => {
         });
 
         // 2. Insertar en SponsorCategory
-        if (Array.isArray(rubrosParsed)) {
-            await Promise.all(
-                rubrosParsed.map(async (categoryId) => {
-                    await prisma.sponsorCategory.create({
-                        data: {
-                            sponsorId: sponsor.id,
-                            categoryId: Number(categoryId)
-                        }
-                    });
-                })
-            );
-        }
+        if (Array.isArray(rubrosParsed) && rubrosParsed.length > 0){
+            const sponsorCategoriesData = rubrosParsed.map(categoryId => ({
+                sponsorId: sponsor.id,
+                categoryId: Number(categoryId)
+            }));
 
+            await prisma.sponsorCategory.createMany({
+                data: sponsorCategoriesData,
+                skipDuplicates: true     // Opcional, evita duplicados
+            });
+        }
+       
         res.status(201).json({ message: "Sponsor creado correctamente" });
     } catch (error) {
         // Borrar archivos subidos si hay error

@@ -40,83 +40,83 @@ model User {
 }
 
 model Worker {
-  id             Int      @id @default(autoincrement())
-  subtitle       String   @db.VarChar(100)
-  description    String   @db.Text
-  workLocation   Json
-  workingDays    Json
-  workingHours   Json
-  rating         Decimal  @db.Decimal(3, 2) @default(0)
-  jobsCompleted  Int      @default(0)
-  profilePicture String   @db.VarChar(255)
-  createdAt      DateTime @default(now())
-  extraData      Json?
+  id                  Int      @id @default(autoincrement())
+  subtitle            String   @db.VarChar(100)
+  description         String   @db.Text
+  workLocation        Json
+  workingDays         Json
+  workingHours        Json
+  rating              Decimal  @db.Decimal(3, 2) @default(0)
+  jobsCompleted       Int      @default(0)
+  profilePicture      String   @db.VarChar(255)
+  createdAt           DateTime @default(now())
+  extraData           Json?
 
   // Relaciones
-  user   User   @relation(fields: [userId], references: [id])
-  userId Int    @unique
+  user                User   @relation(fields: [userId], references: [id])
+  userId              Int    @unique
 
-  workerCategories WorkerCategory[]
-  sponsorWorkers   SponsorWorker[]
-  applications Application[]
+  workerCategories    WorkerCategory[]
+  sponsorWorkers      SponsorWorker[]
+  applications        Application[]
 
   @@map("workers")
 }
 
 
 model WorkerCategory {
-  workerId        Int
-  categoryId      Int
-  hasCertificate  Boolean   @default(false)
-  isActive        Boolean   @default(false)
+  workerId            Int
+  categoryId          Int
+  hasCertificate      Boolean   @default(false)
+  isActive            Boolean   @default(false)
 
-  createdAt DateTime @default(now()) @db.Timestamp
+  createdAt           DateTime @default(now()) @db.Timestamp
 
 
   // Relationships
-  worker   Worker   @relation(fields: [workerId], references: [id])
-  category Category @relation(fields: [categoryId], references: [id])
+  worker              Worker   @relation(fields: [workerId], references: [id])
+  category            Category @relation(fields: [categoryId], references: [id])
 
   @@id([workerId, categoryId])
   @@map("worker_categories")
 }
 
 model Category {
-  id          Int          @id @default(autoincrement())
-  name        String       @db.VarChar(45)
-  description String       @db.Text
+  id                  Int          @id @default(autoincrement())
+  name                String       @db.VarChar(45)
+  description         String       @db.Text
 
 
   // Relaciones
-  workerCategories  WorkerCategory[]
-  sponsorCategories SponsorCategory[]
-  jobRequests       JobRequest[] @relation("CategoryToJobRequest")
+  workerCategories    WorkerCategory[]
+  sponsorCategories   SponsorCategory[]
+  jobRequests         JobRequest[] @relation("CategoryToJobRequest")
 
 
   @@map("categories")
 }
 
 model SponsorCategory {
-  sponsorId  Int
-  categoryId Int
+  sponsorId           Int
+  categoryId          Int
 
   // Relationships
-  sponsor  Sponsor  @relation(fields: [sponsorId], references: [id])
-  category Category @relation(fields: [categoryId], references: [id])
+  sponsor             Sponsor  @relation(fields: [sponsorId], references: [id])
+  category            Category @relation(fields: [categoryId], references: [id])
 
   @@id([sponsorId, categoryId])
   @@map("sponsor_categories")
 }
 
 model SponsorWorker {
-  sponsorId Int
-  workerId  Int
-  linkDate  DateTime @default(now())
-  isActive  Boolean  @default(false)
+  sponsorId         Int
+  workerId          Int
+  linkDate          DateTime @default(now())
+  isActive          Boolean  @default(false)
 
   // Relationships
-  sponsor Sponsor @relation(fields: [sponsorId], references: [id])
-  worker  Worker  @relation(fields: [workerId], references: [id])
+  sponsor           Sponsor @relation(fields: [sponsorId], references: [id])
+  worker            Worker  @relation(fields: [workerId], references: [id])
 
   @@id([sponsorId, workerId])
   @@map("sponsor_workers")
@@ -149,64 +149,64 @@ model Sponsor {
 }
 
 model SponsorInventory {
-  sponsorId    Int
-  productId    Int
-  stock        Int
-  sellingPrice Int
-  minSale      Int
-  maxSale      Int
-  saleUnit     String @db.VarChar(30)
+  sponsorId             Int
+  productId             Int
+  stock                 Int
+  sellingPrice          Int
+  minSale               Int
+  maxSale               Int
+  saleUnit              String @db.VarChar(30)
 
   // Relationships
-  sponsor Sponsor @relation(fields: [sponsorId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  sponsor               Sponsor @relation(fields: [sponsorId], references: [id])
+  product               Product @relation(fields: [productId], references: [id])
 
   @@id([sponsorId, productId])
   @@map("sponsor_inventory")
 }
 
 model Product {
-  id         Int    @id @default(autoincrement())
-  name       String @db.VarChar(70)
-  brand      String @db.VarChar(45)
-  volume     Int
-  volumeUnit String @db.VarChar(30)
-
+  id                     Int    @id @default(autoincrement())
+  name                   String @db.VarChar(70)
+  brand                  String @db.VarChar(45)
+  volume                 Int
+  volumeUnit             String @db.VarChar(30)
+            
   // Relationships
-  sponsorInventory SponsorInventory[]
+  sponsorInventory       SponsorInventory[]
 
   @@map("products")
 }
 
 model JobRequest {
-  id              Int      @id @default(autoincrement())
-  title           String   @db.VarChar(70)
-  urgency         Boolean
-  jobCreationDate DateTime @default(now())
-  date            DateTime
-  description     String   @db.Text
-  address         Json
-  propertyType    String
-  floor           String?
-  aparmentNumber  String?
-  position        Json
-  extraData       Json?
-  photos          Json?
-  isVisible       Boolean  @default(true)
+  id                      Int      @id @default(autoincrement())
+  title                   String   @db.VarChar(70)
+  urgency                 Boolean
+  jobCreationDate         DateTime @default(now())
+  date                    DateTime
+  description             String   @db.Text
+  address                 Json
+  propertyType            String
+  floor                   String?
+  aparmentNumber          String?
+  position                Json
+  extraData               Json?
+  photos                  Json?
+  isVisible               Boolean  @default(true)
+        
+  user                    User @relation(fields: [userId], references: [id])
+  userId                  Int
+        
+  status                  Status @relation(fields: [statusId], references: [id])
+  statusId                Int
+        
+  service                 Category @relation("CategoryToJobRequest", fields: [serviceKey], references: [id])
+  serviceKey              Int
+        
+  applicationSelected     Application? @relation("SelectedApplication", fields: [applicationSelectedId], references: [id])
+  applicationSelectedId   Int? @unique
 
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
-
-  status   Status @relation(fields: [statusId], references: [id])
-  statusId Int
-
-  service    Category @relation("CategoryToJobRequest", fields: [serviceKey], references: [id])
-  serviceKey Int
-
-  applicationSelected   Application? @relation("SelectedApplication", fields: [applicationSelectedId], references: [id])
-  applicationSelectedId Int? @unique
-
-  applications Application[] @relation("JobRequestApplications")
+  applications            Application[] @relation("JobRequestApplications")
 
   @@map("job_requests")
 }
@@ -216,25 +216,25 @@ model Status {
   id               Int      @id @default(autoincrement())
   name             String   @db.VarChar(45) @unique
 
-  jobRequests JobRequest[]
+  jobRequests      JobRequest[]
 
   @@map("statuses")
 }
 
 model Application {
-  id                Int      @id @default(autoincrement())
-  submittedAt       DateTime @default(now())
-  budget            Int
-  description       String   @db.Text
-  requireVisit      Boolean
+  id                    Int      @id @default(autoincrement())
+  submittedAt           DateTime @default(now())
+  budget                Int
+  description           String   @db.Text
+  requireVisit          Boolean
 
-  jobRequestId      Int
-  workerId          Int
+  jobRequestId          Int
+  workerId              Int
 
-  jobRequest JobRequest @relation("JobRequestApplications", fields: [jobRequestId], references: [id])
-  worker     Worker     @relation(fields: [workerId], references: [id])
+  jobRequest            JobRequest @relation("JobRequestApplications", fields: [jobRequestId], references: [id])
+  worker                Worker     @relation(fields: [workerId], references: [id])
 
-  selectedByJobRequest JobRequest? @relation("SelectedApplication")
+  selectedByJobRequest  JobRequest? @relation("SelectedApplication")
 
   @@map("applications")
 }

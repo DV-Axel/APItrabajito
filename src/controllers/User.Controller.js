@@ -185,6 +185,7 @@ export const desactivateAccount = async(req, res) => {
     }
 }
 
+
 export const selectWorker = async (req, res) => {
     const { jobRequestId, postulationId } = req.body;
 
