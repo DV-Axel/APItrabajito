@@ -82,9 +82,9 @@ model WorkerCategory {
 }
 
 model Category {
-  id                  Int          @id @default(autoincrement())
-  name                String       @db.VarChar(45)
-  description         String       @db.Text
+  id          Int     @id @default(autoincrement())
+  name        String  @unique @db.VarChar(45)
+  description String  @db.Text
 
 
   // Relaciones

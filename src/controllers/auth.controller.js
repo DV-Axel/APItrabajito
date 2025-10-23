@@ -228,7 +228,7 @@ export const forgotPassword = async(req, res) => {
         }
 
         const resetToken = generateToken({ userId: user.id }, "15m");
-        const resetUrl = `http://localhost:3000/auth/reset-password?token=${resetToken}`;
+        const resetUrl = `http://localhost:5175/nuevaContraseña?token=${resetToken}`;
         // const resetUrl = `RUTA AL FRONT`;
 
         await transporter.sendMail({
@@ -240,7 +240,7 @@ export const forgotPassword = async(req, res) => {
                    <a href="${resetUrl}">Reestablecer contraseña</p>,`
         });
         console.log(resetUrl);
-        
+
         res.status(200).json({ message: "Correo de recuperación enviado" });
     } catch (error) {
         res.status(500).json({
