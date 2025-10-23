@@ -3,9 +3,14 @@ import {parseIfString} from "../data/helpers.js";
 import path from 'path';
 import fs from 'fs';
 import { deleteUploadedFiles } from "../utils/fileUtils.js";
+import { supabase } from "../utils/supabaseClient.js";
+import { uploadToSupabase } from "../utils/updateToSupabase.js";
 
 export const createSponsor = async (req, res) => {
     
+    let logoDestinationPath = null;
+    let companyRegDestinationPath = null;
+
     try {
         console.log("Petición recibida");
         console.log("Body:", req.body);
@@ -24,8 +29,33 @@ export const createSponsor = async (req, res) => {
         const socialParsed = parseIfString(social);
 
         // Rutas de archivos subidos
-        const logoPath = req.files?.logo?.[0]?.path?.replace(/\\/g, "/");
-        const companyRegPath = req.files?.companyRegistration?.[0]?.path?.replace(/\\/g, "/");
+        // const logoPath = req.files?.logo?.[0]?.path?.replace(/\\/g, "/");
+        // const companyRegPath = req.files?.companyRegistration?.[0]?.path?.replace(/\\/g, "/");
+        const logoFile = req.files?.logo?.[0];
+        const companyRegFile = req.files?.companyRegistration?.[0];
+
+        let logoUrl = null;
+        let companyRegUrl = null;
+
+        if (logoFile) {
+            logoDestinationPath = `${cuilId}/logo-${Date.now()}-${logoFile.originalname}`;
+            logoUrl = await uploadToSupabase({
+                bucket: 'sponsor-logos',
+                filePath: logoFile.path,
+                destinationPath: logoDestinationPath,
+                mimetype: logoFile.mimetype
+            });
+        }
+
+        if (companyRegFile) {
+            companyRegDestinationPath = `${cuilId}/reg-${Date.now()}-${companyRegFile.originalname}`;
+            companyRegUrl = await uploadToSupabase({
+                bucket: 'sponsor-company-registration',
+                filePath: companyRegFile.path,
+                destinationPath: companyRegDestinationPath,
+                mimetype: companyRegFile.mimetype
+            });
+        }
 
         // Validar que el sponsor no esté registrado como usuario
         const existingUser = await prisma.user.findFirst({
@@ -36,6 +66,7 @@ export const createSponsor = async (req, res) => {
                 ]
             }
         });
+
         if (existingUser) {
             return res.status(400).json({ message: "El correo ya está registrado como usuario" });
         }
@@ -76,11 +107,24 @@ export const createSponsor = async (req, res) => {
         res.status(201).json({ message: "Sponsor creado correctamente" });
     } catch (error) {
         // Borrar archivos subidos si hay error
-        if (req.files) {
-            // Junta todos los archivos en un solo array
-            const allFIles = Object.values(req.files).flat();
-            deleteUploadedFiles(allFIles);
+        // if (req.files) {
+        //     // Junta todos los archivos en un solo array
+        //     const allFIles = Object.values(req.files).flat();
+        //     deleteUploadedFiles(allFIles);
+        // }
+
+        // Borra archivos subidos a Supabase si la creación falló
+        if (logoDestinationPath) {
+            await supabase.storage
+                .from('sponsor-logos')
+                .remove([logoDestinationPath]);
         }
+        if (companyRegDestinationPath) {
+            await supabase.storage
+                .from('sponsor-company-registration')
+                .remove([companyRegDestinationPath]);
+        }
+
         console.error("Error al crear Sponsor:", error);
         res.status(500).json({ error: "Error al crear Sponsor" });
     }
