@@ -236,14 +236,14 @@ export const checkPostulation = async (req, res) => {
 
 export const getAplicationsByJobRequestId = async (req, res) => {
     try {
-        const { jobRequestId } = req.query;
+        const { id } = req.params;
 
-        if (!jobRequestId) {
-            return res.status(400).json({ error: "Falta el parámetro jobRequestId" });
+        if (!id) {
+            return res.status(400).json({ error: "Falta el parámetro id" });
         }
 
         const applications = await prisma.application.findMany({
-            where: { jobRequestId: Number(jobRequestId) },
+            where: { jobRequestId: Number(id) },
             include: {
                 worker: {
                     include: {

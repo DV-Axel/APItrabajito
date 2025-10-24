@@ -22,7 +22,7 @@ jobRequestRouter.post('/', uploadJobRequestPhotos.array('photos'), createJobRequ
 jobRequestRouter.get('/check-postulacion', checkPostulation);
 jobRequestRouter.get("/detalle/:id", getJobRequestById); // Detalle de una solicitud de servicio
 jobRequestRouter.post("/postularse", setPostulation);
-jobRequestRouter.get("/postulaciones-workers", getAplicationsByJobRequestId); // Obtener las postulaciones de una solicitud de servicio
+jobRequestRouter.get("/postulaciones-workers/:id", getAplicationsByJobRequestId); // Obtener las postulaciones de una solicitud de servicio
 jobRequestRouter.get("/postulacion-worker/:id", getAplicationById); // Obtener una postulacion por su id
 jobRequestRouter.put("/acuerdo-mutuo/:id", setMutualAgreement); //Evalua la entidad que acepta el acuerdo y pone true la columna de agreement
 jobRequestRouter.get("/:id", validateSchema(idSchema, "params"), getJobRequestsByUserId);
