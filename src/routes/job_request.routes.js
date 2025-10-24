@@ -7,7 +7,9 @@ import {
     setPostulation,
     checkPostulation,
     getAplicationsByJobRequestId,
-    getAplicationById
+    getAplicationById,
+    setMutualAgreement
+
 } from "../controllers/job_request.controller.js";
 import { uploadJobRequestPhotos } from '../middlewares/images/updateJobRequestPhotos.js';
 import { validateSchema } from '../middlewares/validations/validateSchema.js';
@@ -22,6 +24,7 @@ jobRequestRouter.get("/detalle/:id", getJobRequestById); // Detalle de una solic
 jobRequestRouter.post("/postularse", setPostulation);
 jobRequestRouter.get("/postulaciones-workers", getAplicationsByJobRequestId); // Obtener las postulaciones de una solicitud de servicio
 jobRequestRouter.get("/postulacion-worker/:id", getAplicationById); // Obtener una postulacion por su id
+jobRequestRouter.put("/acuerdo-mutuo/:id", setMutualAgreement); //Evalua la entidad que acepta el acuerdo y pone true la columna de agreement
 jobRequestRouter.get("/:id", validateSchema(idSchema, "params"), getJobRequestsByUserId);
 
 

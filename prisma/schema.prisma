@@ -193,6 +193,9 @@ model JobRequest {
   extraData               Json?
   photos                  Json?
   isVisible               Boolean  @default(true)
+  agreementWorker         Boolean @default(false)
+  agreementUser           Boolean @default(false)
+
         
   user                    User @relation(fields: [userId], references: [id])
   userId                  Int
