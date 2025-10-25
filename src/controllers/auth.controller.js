@@ -152,7 +152,7 @@ export const login = async(req, res) => {
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).json( { message: "Correo Electrónico o Password Incorrectos" });
+            return res.status(400).json( { message: "Email o Password Incorrecto" });
         }
 
         const token = generateToken({ userId: user.id }, "2h");

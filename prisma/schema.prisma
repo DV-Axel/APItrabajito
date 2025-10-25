@@ -1,17 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  //output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -20,7 +13,6 @@ model User {
   firstName        String       @db.VarChar(45)
   lastName         String       @db.VarChar(70)
   dni              String       @db.VarChar(15)
-  idType           String
   email            String       @unique @db.VarChar(80)
   birthDate        DateTime     @db.Date
   password         String       @db.VarChar(255)
@@ -31,221 +23,178 @@ model User {
   number           String       @db.VarChar(10)
   postalCode       String       @db.VarChar(10)
   departmentNumber String?      @db.VarChar(10)
+  idType           String
   profilePicture   String?
-  worker           Worker?
-  // Relationships
   jobRequests      JobRequest[]
+  worker           Worker?
 
   @@map("users")
 }
 
 model Worker {
-  id                  Int      @id @default(autoincrement())
-  subtitle            String   @db.VarChar(100)
-  description         String   @db.Text
-  workLocation        Json
-  workingDays         Json
-  workingHours        Json
-  rating              Decimal  @db.Decimal(3, 2) @default(0)
-  jobsCompleted       Int      @default(0)
-  profilePicture      String   @db.VarChar(255)
-  createdAt           DateTime @default(now())
-  extraData           Json?
-
-  // Relaciones
-  user                User   @relation(fields: [userId], references: [id])
-  userId              Int    @unique
-
-  workerCategories    WorkerCategory[]
-  sponsorWorkers      SponsorWorker[]
-  applications        Application[]
+  id               Int              @id @default(autoincrement())
+  userId           Int              @unique
+  description      String
+  rating           Decimal          @default(0) @db.Decimal(3, 2)
+  jobsCompleted    Int              @default(0)
+  profilePicture   String           @db.VarChar(255)
+  createdAt        DateTime         @default(now())
+  subtitle         String           @db.VarChar(100)
+  extraData        Json?
+  workLocation     Json
+  workingDays      Json
+  workingHours     Json
+  applications     Application[]
+  sponsorWorkers   SponsorWorker[]
+  workerCategories WorkerCategory[]
+  user             User             @relation(fields: [userId], references: [id])
 
   @@map("workers")
 }
 
-
 model WorkerCategory {
-  workerId            Int
-  categoryId          Int
-  hasCertificate      Boolean   @default(false)
-  isActive            Boolean   @default(false)
-
-  createdAt           DateTime @default(now()) @db.Timestamp
-
-
-  // Relationships
-  worker              Worker   @relation(fields: [workerId], references: [id])
-  category            Category @relation(fields: [categoryId], references: [id])
+  workerId       Int
+  categoryId     Int
+  hasCertificate Boolean  @default(false)
+  isActive       Boolean  @default(false)
+  createdAt      DateTime @default(now()) @db.Timestamp(6)
+  category       Category @relation(fields: [categoryId], references: [id])
+  worker         Worker   @relation(fields: [workerId], references: [id])
 
   @@id([workerId, categoryId])
   @@map("worker_categories")
 }
 
 model Category {
-  id          Int     @id @default(autoincrement())
-  name        String  @unique @db.VarChar(45)
-  description String  @db.Text
-
-
-  // Relaciones
-  workerCategories    WorkerCategory[]
-  sponsorCategories   SponsorCategory[]
-  jobRequests         JobRequest[] @relation("CategoryToJobRequest")
-
+  id                Int               @id @default(autoincrement())
+  name              String            @unique @db.VarChar(45)
+  description       String
+  jobRequests       JobRequest[]      @relation("CategoryToJobRequest")
+  sponsorCategories SponsorCategory[]
+  workerCategories  WorkerCategory[]
 
   @@map("categories")
 }
 
 model SponsorCategory {
-  sponsorId           Int
-  categoryId          Int
-
-  // Relationships
-  sponsor             Sponsor  @relation(fields: [sponsorId], references: [id])
-  category            Category @relation(fields: [categoryId], references: [id])
+  sponsorId  Int
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+  sponsor    Sponsor  @relation(fields: [sponsorId], references: [id])
 
   @@id([sponsorId, categoryId])
   @@map("sponsor_categories")
 }
 
 model SponsorWorker {
-  sponsorId         Int
-  workerId          Int
-  linkDate          DateTime @default(now())
-  isActive          Boolean  @default(false)
-
-  // Relationships
-  sponsor           Sponsor @relation(fields: [sponsorId], references: [id])
-  worker            Worker  @relation(fields: [workerId], references: [id])
+  sponsorId Int
+  workerId  Int
+  linkDate  DateTime @default(now())
+  isActive  Boolean  @default(false)
+  sponsor   Sponsor  @relation(fields: [sponsorId], references: [id])
+  worker    Worker   @relation(fields: [workerId], references: [id])
 
   @@id([sponsorId, workerId])
   @@map("sponsor_workers")
 }
 
 model Sponsor {
-  id                    Int       @id @default(autoincrement())
-  tradeName             String    @db.VarChar(45)
-  address               String    @db.VarChar(45)
-  phone                 Int
-  cuilId                BigInt    @unique
-  businessName          String    @db.VarChar(45)
-  registeredAt          DateTime  @default(now())
-  email                 String    @unique @db.VarChar(80)
-  alternativeEmail      String    @unique @db.VarChar(80)
-  contactName           String    @db.VarChar(70)
-  aditionalInformation  String?   @db.Text
-  logo                  String?
-  companyRegistration   String
-  social                Json?
-  workingHours          Json?
-  workingDays           Json?
-
-  // Relationships
-  sponsorCategories     SponsorCategory[]
-  sponsorWorkers        SponsorWorker[]
-  inventory             SponsorInventory[]
+  id                   Int                @id @default(autoincrement())
+  address              String             @db.VarChar(45)
+  phone                Int
+  businessName         String             @db.VarChar(45)
+  registeredAt         DateTime           @default(now())
+  aditionalInformation String?
+  alternativeEmail     String             @unique @db.VarChar(80)
+  companyRegistration  String
+  contactName          String             @db.VarChar(70)
+  cuilId               BigInt             @unique
+  email                String             @unique @db.VarChar(80)
+  logo                 String?
+  social               Json?
+  tradeName            String             @db.VarChar(45)
+  workingDays          Json?
+  workingHours         Json?
+  sponsorCategories    SponsorCategory[]
+  inventory            SponsorInventory[]
+  sponsorWorkers       SponsorWorker[]
 
   @@map("sponsors")
 }
 
 model SponsorInventory {
-  sponsorId             Int
-  productId             Int
-  stock                 Int
-  sellingPrice          Int
-  minSale               Int
-  maxSale               Int
-  saleUnit              String @db.VarChar(30)
-
-  // Relationships
-  sponsor               Sponsor @relation(fields: [sponsorId], references: [id])
-  product               Product @relation(fields: [productId], references: [id])
+  sponsorId    Int
+  productId    Int
+  stock        Int
+  sellingPrice Int
+  minSale      Int
+  maxSale      Int
+  saleUnit     String  @db.VarChar(30)
+  product      Product @relation(fields: [productId], references: [id])
+  sponsor      Sponsor @relation(fields: [sponsorId], references: [id])
 
   @@id([sponsorId, productId])
   @@map("sponsor_inventory")
 }
 
 model Product {
-  id                     Int    @id @default(autoincrement())
-  name                   String @db.VarChar(70)
-  brand                  String @db.VarChar(45)
-  volume                 Int
-  volumeUnit             String @db.VarChar(30)
-            
-  // Relationships
-  sponsorInventory       SponsorInventory[]
+  id               Int                @id @default(autoincrement())
+  name             String             @db.VarChar(70)
+  brand            String             @db.VarChar(45)
+  volume           Int
+  volumeUnit       String             @db.VarChar(30)
+  sponsorInventory SponsorInventory[]
 
   @@map("products")
 }
 
 model JobRequest {
-  id                      Int      @id @default(autoincrement())
-  title                   String   @db.VarChar(70)
-  urgency                 Boolean
-  jobCreationDate         DateTime @default(now())
-  date                    DateTime
-  description             String   @db.Text
-  address                 Json
-  propertyType            String
-  floor                   String?
-  aparmentNumber          String?
-  position                Json
-  extraData               Json?
-  photos                  Json?
-  isVisible               Boolean  @default(true)
-        
-  user                    User @relation(fields: [userId], references: [id])
-  userId                  Int
-        
-  status                  Status @relation(fields: [statusId], references: [id])
-  statusId                Int
-        
-  service                 Category @relation("CategoryToJobRequest", fields: [serviceKey], references: [id])
-  serviceKey              Int
-        
-  applicationSelected     Application? @relation("SelectedApplication", fields: [applicationSelectedId], references: [id])
-  applicationSelectedId   Int? @unique
-
-  applications            Application[] @relation("JobRequestApplications")
+  id                    Int           @id @default(autoincrement())
+  title                 String        @db.VarChar(70)
+  description           String
+  userId                Int
+  date                  DateTime
+  extraData             Json?
+  urgency               Boolean
+  address               Json
+  aparmentNumber        String?
+  floor                 String?
+  jobCreationDate       DateTime      @default(now())
+  photos                Json?
+  position              Json
+  propertyType          String
+  statusId              Int
+  serviceKey            Int
+  applicationSelectedId Int?          @unique
+  isVisible             Boolean       @default(true)
+  applications          Application[] @relation("JobRequestApplications")
+  applicationSelected   Application?  @relation("SelectedApplication", fields: [applicationSelectedId], references: [id])
+  service               Category      @relation("CategoryToJobRequest", fields: [serviceKey], references: [id])
+  status                Status        @relation(fields: [statusId], references: [id])
+  user                  User          @relation(fields: [userId], references: [id])
 
   @@map("job_requests")
 }
 
-
 model Status {
-  id               Int      @id @default(autoincrement())
-  name             String   @db.VarChar(45) @unique
-
-  jobRequests      JobRequest[]
+  id          Int          @id @default(autoincrement())
+  name        String       @unique @db.VarChar(45)
+  jobRequests JobRequest[]
 
   @@map("statuses")
 }
 
 model Application {
-  id                    Int      @id @default(autoincrement())
-  submittedAt           DateTime @default(now())
-  budget                Int
-  description           String   @db.Text
-  requireVisit          Boolean
-
-  jobRequestId          Int
-  workerId              Int
-
-  jobRequest            JobRequest @relation("JobRequestApplications", fields: [jobRequestId], references: [id])
-  worker                Worker     @relation(fields: [workerId], references: [id])
-
-  selectedByJobRequest  JobRequest? @relation("SelectedApplication")
+  id                   Int         @id @default(autoincrement())
+  submittedAt          DateTime    @default(now())
+  budget               Int
+  description          String
+  requireVisit         Boolean
+  jobRequestId         Int
+  workerId             Int
+  jobRequest           JobRequest  @relation("JobRequestApplications", fields: [jobRequestId], references: [id])
+  worker               Worker      @relation(fields: [workerId], references: [id])
+  selectedByJobRequest JobRequest? @relation("SelectedApplication")
 
   @@map("applications")
 }
-
-
-// model JobRequestStatus {
-//   id   Int    @id @default(autoincrement())
-//   name String @db.VarChar(45)
-
-//   // Relationships
-//   jobRequests JobRequest[]
-
-//   @@map("job_request_statuses")
-// }
