@@ -108,13 +108,44 @@ export const getAllJobRequests = async (req, res) => {
 };
 
 
+export const setMutualAgreement = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { entidad } = req.body;
+
+        if (!id || !entidad) {
+            return res.status(400).json({ error: "Faltan parámetros obligatorios" });
+        }
+
+        let updateData = {};
+        if (entidad === "user") {
+            updateData.agreementUser = true;
+        } else if (entidad === "worker") {
+            updateData.agreementWorker = true;
+        } else {
+            return res.status(400).json({ error: "Entidad inválida" });
+        }
+
+        const jobRequest = await prisma.jobRequest.update({
+            where: { id: Number(id) },
+            data: updateData
+        });
+
+        res.status(200).json({ message: 'Acuerdo mutuo registrado correctamente', jobRequest });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+
 // Obtener un JobRequest por ID
 export const getJobRequestById = async (req, res) => {
     try {
         const { id } = req.params;
         const jobRequest = await prisma.jobRequest.findUnique({
             where: { id: Number(id) },
-            include: { user: true, service: true }
+            include: { user: true, service: true}
         });
         if (!jobRequest) {
             return res.status(404).json({ error: 'JobRequest no encontrado' });
@@ -223,14 +254,14 @@ export const checkPostulation = async (req, res) => {
 
 export const getAplicationsByJobRequestId = async (req, res) => {
     try {
-        const { jobRequestId } = req.query;
+        const { id } = req.params;
 
-        if (!jobRequestId) {
-            return res.status(400).json({ error: "Falta el parámetro jobRequestId" });
+        if (!id) {
+            return res.status(400).json({ error: "Falta el parámetro id" });
         }
 
         const applications = await prisma.application.findMany({
-            where: { jobRequestId: Number(jobRequestId) },
+            where: { jobRequestId: Number(id) },
             include: {
                 worker: {
                     include: {

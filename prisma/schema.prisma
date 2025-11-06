@@ -149,29 +149,37 @@ model Product {
 }
 
 model JobRequest {
-  id                    Int           @id @default(autoincrement())
-  title                 String        @db.VarChar(70)
-  description           String
-  userId                Int
-  date                  DateTime
-  extraData             Json?
-  urgency               Boolean
-  address               Json
-  aparmentNumber        String?
-  floor                 String?
-  jobCreationDate       DateTime      @default(now())
-  photos                Json?
-  position              Json
-  propertyType          String
-  statusId              Int
-  serviceKey            Int
-  applicationSelectedId Int?          @unique
-  isVisible             Boolean       @default(true)
-  applications          Application[] @relation("JobRequestApplications")
-  applicationSelected   Application?  @relation("SelectedApplication", fields: [applicationSelectedId], references: [id])
-  service               Category      @relation("CategoryToJobRequest", fields: [serviceKey], references: [id])
-  status                Status        @relation(fields: [statusId], references: [id])
-  user                  User          @relation(fields: [userId], references: [id])
+  id                      Int      @id @default(autoincrement())
+  title                   String   @db.VarChar(70)
+  urgency                 Boolean
+  jobCreationDate         DateTime @default(now())
+  date                    DateTime
+  description             String   @db.Text
+  address                 Json
+  propertyType            String
+  floor                   String?
+  aparmentNumber          String?
+  position                Json
+  extraData               Json?
+  photos                  Json?
+  isVisible               Boolean  @default(true)
+  agreementWorker         Boolean @default(false)
+  agreementUser           Boolean @default(false)
+
+        
+  user                    User @relation(fields: [userId], references: [id])
+  userId                  Int
+        
+  status                  Status @relation(fields: [statusId], references: [id])
+  statusId                Int
+        
+  service                 Category @relation("CategoryToJobRequest", fields: [serviceKey], references: [id])
+  serviceKey              Int
+        
+  applicationSelected     Application? @relation("SelectedApplication", fields: [applicationSelectedId], references: [id])
+  applicationSelectedId   Int? @unique
+
+  applications            Application[] @relation("JobRequestApplications")
 
   @@map("job_requests")
 }

@@ -126,22 +126,24 @@ CREATE TABLE "products" (
 CREATE TABLE "job_requests" (
     "id" SERIAL NOT NULL,
     "title" VARCHAR(70) NOT NULL,
-    "description" TEXT NOT NULL,
-    "userId" INTEGER NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL,
-    "extraData" JSONB,
     "urgency" BOOLEAN NOT NULL,
-    "address" JSONB NOT NULL,
-    "aparmentNumber" TEXT,
-    "floor" TEXT,
     "jobCreationDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "photos" JSONB,
-    "position" JSONB NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL,
+    "description" TEXT NOT NULL,
+    "address" JSONB NOT NULL,
     "propertyType" TEXT NOT NULL,
+    "floor" TEXT,
+    "aparmentNumber" TEXT,
+    "position" JSONB NOT NULL,
+    "extraData" JSONB,
+    "photos" JSONB,
+    "isVisible" BOOLEAN NOT NULL DEFAULT true,
+    "agreementWorker" BOOLEAN NOT NULL DEFAULT false,
+    "agreementUser" BOOLEAN NOT NULL DEFAULT false,
+    "userId" INTEGER NOT NULL,
     "statusId" INTEGER NOT NULL,
     "serviceKey" INTEGER NOT NULL,
     "applicationSelectedId" INTEGER,
-    "isVisible" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "job_requests_pkey" PRIMARY KEY ("id")
 );
@@ -219,16 +221,16 @@ ALTER TABLE "sponsor_inventory" ADD CONSTRAINT "sponsor_inventory_productId_fkey
 ALTER TABLE "sponsor_inventory" ADD CONSTRAINT "sponsor_inventory_sponsorId_fkey" FOREIGN KEY ("sponsorId") REFERENCES "sponsors"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "job_requests" ADD CONSTRAINT "job_requests_applicationSelectedId_fkey" FOREIGN KEY ("applicationSelectedId") REFERENCES "applications"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "job_requests" ADD CONSTRAINT "job_requests_serviceKey_fkey" FOREIGN KEY ("serviceKey") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "job_requests" ADD CONSTRAINT "job_requests_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "job_requests" ADD CONSTRAINT "job_requests_statusId_fkey" FOREIGN KEY ("statusId") REFERENCES "statuses"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "job_requests" ADD CONSTRAINT "job_requests_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "job_requests" ADD CONSTRAINT "job_requests_serviceKey_fkey" FOREIGN KEY ("serviceKey") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "job_requests" ADD CONSTRAINT "job_requests_applicationSelectedId_fkey" FOREIGN KEY ("applicationSelectedId") REFERENCES "applications"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "applications" ADD CONSTRAINT "applications_jobRequestId_fkey" FOREIGN KEY ("jobRequestId") REFERENCES "job_requests"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -70,7 +70,7 @@ export const signup = async(req, res) => {
                 departmentNumber,
                 postalCode,
                 idType,
-                profilePicture: '/images/profilePicture/avatar.jpeg'
+                profilePicture: ''
             }
         });
 
