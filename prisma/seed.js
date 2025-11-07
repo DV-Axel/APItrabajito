@@ -318,6 +318,39 @@ async function main() {
     }
 
 
+    // Ejemplo de JobRequests para el seed
+    const jobRequests = [
+        {
+            title: "Cambio de termica",
+            urgency: true,
+            jobCreationDate: new Date("2025-11-07 04:27:59.717"),
+            date: new Date("2025-11-21 00:00:00"),
+            description: "Necesito cambiar la termica de mi casa por que exploto, creo que fue por el consumo. Por favor tambien verificar mi consumo.",
+            address: {"road": "Tuyutí", "town": "Valentín Alsina", "state": "Buenos Aires", "country": "Argentina", "postcode": "1822", "country_code": "ar", "house_number": "2556", "neighbourhood": "Valentín Alsina", "ISO3166-2-lvl4": "AR-B", "state_district": "Partido de Lanús"},
+            propertyType: "Casa",
+            floor: null,
+            aparmentNumber: null,
+            position: {"lat":-34.6755207,"lng":-58.4068976},
+            extraData: {"tablero": "si", "tipo_trabajo": "reparacion", "acceso_seguro": "si", "certificacion": "no", "corte_general": "si", "interior_exterior": "interior", "descripcion_adicional": "es mi casa propia y tengo los planos."},
+            photos: [{"url": "/images/jobRequests/1762489679704-Captura de pantalla 2024-08-31 233019.png", "name": "Captura de pantalla 2024-08-31 233019.png", "note": "materiales"}, {"url": "/images/jobRequests/1762489679704-Captura de pantalla 2024-09-01 203905.png", "name": "Captura de pantalla 2024-09-01 203905.png", "note": "termica explotada"}, {"url": "/images/jobRequests/1762489679705-Captura de pantalla 2024-09-26 172615.png", "name": "Captura de pantalla 2024-09-26 172615.png", "note": "plano electrico"}, {"url": "/images/jobRequests/1762489679711-Captura de pantalla 2024-10-10 232133.png", "name": "Captura de pantalla 2024-10-10 232133.png", "note": "tablero"}],
+            isVisible: true,
+            agreementWorker: false,
+            agreementUser: false,
+            finalBudget: 0,
+            workFinishedUser: false,
+            workFinishedWorker: false,
+            userId: 1, // ID de usuario existente
+            statusId: 1, // ID de status existente
+            serviceKey: 6 // ID de categoría existente
+        }
+    ];
+
+// Inserción en el seed
+    for (const job of jobRequests) {
+        await prisma.jobRequest.create({ data: job });
+    }
+
+
 }
 
 (async () => {
