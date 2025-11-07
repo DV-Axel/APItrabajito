@@ -166,6 +166,158 @@ async function main() {
             }
         });
     }
+
+    // Usuarios
+    const users = [
+        {
+            firstName: "Axel",
+            lastName: "Cichello",
+            dni: "40143488",
+            idType: "dni",
+            email: "axel.cichello@davinci.edu.ar",
+            birthDate: new Date("1997-07-29"),
+            password: "$2b$10$eaoMcLQ4dCffjU.ELahzJusiDYMxdH7ihkk/7nSM.qD7XVZau3ddK",
+            phone: 1139374061,
+            registrationDate: new Date("2025-11-07"),
+            isVerified: true,
+            address: "Tuyuti",
+            number: "2556",
+            postalCode: "1822",
+            departmentNumber: "1D",
+            profilePicture: "/images/profilePicture/avatar.jpeg"
+        },
+        {
+            firstName: "Lucía",
+            lastName: "Martínez",
+            dni: "40143489",
+            idType: "dni",
+            email: "lucia.martinez@dominiox.com",
+            birthDate: new Date("1995-03-15"),
+            password: "$2b$10$eaoMcLQ4dCffjU.ELahzJusiDYMxdH7ihkk/7nSM.qD7XVZau3ddK",
+            phone: 1139374062,
+            registrationDate: new Date("2025-11-08"),
+            isVerified: true,
+            address: "Belgrano",
+            number: "1234",
+            postalCode: "1001",
+            departmentNumber: "2A",
+            profilePicture: "/images/profilePicture/avatar.jpeg"
+        },
+        {
+            firstName: "Juan",
+            lastName: "Pérez",
+            dni: "40143490",
+            idType: "dni",
+            email: "juan.perez@dominiox.com",
+            birthDate: new Date("1992-06-21"),
+            password: "$2b$10$eaoMcLQ4dCffjU.ELahzJusiDYMxdH7ihkk/7nSM.qD7XVZau3ddK",
+            phone: 1139374063,
+            registrationDate: new Date("2025-11-09"),
+            isVerified: true,
+            address: "Corrientes",
+            number: "5678",
+            postalCode: "1002",
+            departmentNumber: "3B",
+            profilePicture: "/images/profilePicture/avatar.jpeg"
+        },
+        {
+            firstName: "María",
+            lastName: "García",
+            dni: "40143491",
+            idType: "dni",
+            email: "maria.garcia@dominiox.com",
+            birthDate: new Date("1998-12-10"),
+            password: "$2b$10$eaoMcLQ4dCffjU.ELahzJusiDYMxdH7ihkk/7nSM.qD7XVZau3ddK",
+            phone: 1139374064,
+            registrationDate: new Date("2025-11-10"),
+            isVerified: true,
+            address: "San Martín",
+            number: "4321",
+            postalCode: "1003",
+            departmentNumber: "4C",
+            profilePicture: "/images/profilePicture/avatar.jpeg"
+        },
+        {
+            firstName: "Sofía",
+            lastName: "Ramírez",
+            dni: "40143492",
+            idType: "dni",
+            email: "sofia.ramirez@dominiox.com",
+            birthDate: new Date("1996-09-05"),
+            password: "$2b$10$eaoMcLQ4dCffjU.ELahzJusiDYMxdH7ihkk/7nSM.qD7XVZau3ddK",
+            phone: 1139374065,
+            registrationDate: new Date("2025-11-11"),
+            isVerified: true,
+            address: "Libertador",
+            number: "8765",
+            postalCode: "1004",
+            departmentNumber: "5D",
+            profilePicture: "/images/profilePicture/avatar.jpeg"
+        },
+        {
+            firstName: "Pedro",
+            lastName: "López",
+            dni: "40143493",
+            idType: "dni",
+            email: "pedro.lopez@dominiox.com",
+            birthDate: new Date("1993-11-30"),
+            password: "$2b$10$eaoMcLQ4dCffjU.ELahzJusiDYMxdH7ihkk/7nSM.qD7XVZau3ddK",
+            phone: 1139374066,
+            registrationDate: new Date("2025-11-12"),
+            isVerified: true,
+            address: "Rivadavia",
+            number: "6543",
+            postalCode: "1005",
+            departmentNumber: "6E",
+            profilePicture: "/images/profilePicture/avatar.jpeg"
+        },
+        {
+            firstName: "Carlos",
+            lastName: "Gómez",
+            dni: "40143494",
+            idType: "dni",
+            email: "carlos.gomez@dominiox.com",
+            birthDate: new Date("1994-05-18"),
+            password: "$2b$10$eaoMcLQ4dCffjU.ELahzJusiDYMxdH7ihkk/7nSM.qD7XVZau3ddK",
+            phone: 1139374067,
+            registrationDate: new Date("2025-11-13"),
+            isVerified: true,
+            address: "Mitre",
+            number: "7890",
+            postalCode: "1006",
+            departmentNumber: "7F",
+            profilePicture: "/images/profilePicture/avatar.jpeg"
+        },
+        {
+            firstName: "Ana",
+            lastName: "Fernández",
+            dni: "40143495",
+            idType: "dni",
+            email: "ana.fernandez@dominiox.com",
+            birthDate: new Date("1999-02-22"),
+            password: "$2b$10$eaoMcLQ4dCffjU.ELahzJusiDYMxdH7ihkk/7nSM.qD7XVZau3ddK",
+            phone: 1139374068,
+            registrationDate: new Date("2025-11-14"),
+            isVerified: true,
+            address: "Santa Fe",
+            number: "3210",
+            postalCode: "1007",
+            departmentNumber: "8G",
+            profilePicture: "/images/profilePicture/avatar.jpeg"
+        }
+    ];
+
+
+
+    for (const user of users) {
+        await prisma.user.upsert({
+            where: { email: user.email },
+            update: {},
+            create: user
+        });
+    }
+
+
 }
 
 (async () => {
@@ -179,3 +331,8 @@ async function main() {
         await prisma.$disconnect();
     }
 })();
+
+
+
+
+
