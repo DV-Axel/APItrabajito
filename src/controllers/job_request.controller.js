@@ -137,6 +137,38 @@ export const setMutualAgreement = async (req, res) => {
     }
 };
 
+export const setCancelMutualAgreement = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { entidad } = req.body;
+
+        if (!id || !entidad) {
+            return res.status(400).json({ error: "Faltan parámetros obligatorios" });
+        }
+
+        let updateData = {};
+        if (entidad === "user") {
+            updateData.agreementUser = false;
+        } else if (entidad === "worker") {
+            updateData.agreementWorker = false;
+        } else {
+            return res.status(400).json({ error: "Entidad inválida" });
+        }
+
+        const jobRequest = await prisma.jobRequest.update({
+            where: { id: Number(id) },
+            data: updateData
+        });
+
+        res.status(200).json({ message: 'Acuerdo mutuo cancelado correctamente', jobRequest });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+
+
 
 
 // Obtener un JobRequest por ID

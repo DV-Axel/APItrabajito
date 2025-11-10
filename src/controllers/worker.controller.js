@@ -99,6 +99,25 @@ export const createWorker = async (req, res) => {
 }
 
 
+export const getWorkerById = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const worker = await prisma.worker.findUnique({
+            where: { id: Number(id) }
+        });
+
+        if (!worker) {
+            return res.status(404).json({ message: "Worker no encontrado" });
+        }
+
+        return res.status(200).json(worker);
+    } catch (err) {
+        return res.status(500).send({ message: "Error interno del servidor" });
+    }
+}
+
+
 
 
 export const getServicesByCategory = async (req, res) => {

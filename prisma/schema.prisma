@@ -149,12 +149,12 @@ model Product {
 }
 
 model JobRequest {
-  id                      Int      @id @default(autoincrement())
-  title                   String   @db.VarChar(70)
+  id                      Int       @id @default(autoincrement())
+  title                   String    @db.VarChar(70)
   urgency                 Boolean
-  jobCreationDate         DateTime @default(now())
+  jobCreationDate         DateTime  @default(now())
   date                    DateTime
-  description             String   @db.Text
+  description             String    @db.Text
   address                 Json
   propertyType            String
   floor                   String?
@@ -162,9 +162,12 @@ model JobRequest {
   position                Json
   extraData               Json?
   photos                  Json?
-  isVisible               Boolean  @default(true)
-  agreementWorker         Boolean @default(false)
-  agreementUser           Boolean @default(false)
+  isVisible               Boolean   @default(true)
+  agreementWorker         Boolean   @default(false)
+  agreementUser           Boolean   @default(false)
+  finalBudget             Decimal?  @db.Decimal(10, 2) @default(0)
+  workFinishedUser        Boolean   @default(false)
+  workFinishedWorker      Boolean   @default(false)
 
         
   user                    User @relation(fields: [userId], references: [id])
@@ -193,16 +196,20 @@ model Status {
 }
 
 model Application {
-  id                   Int         @id @default(autoincrement())
-  submittedAt          DateTime    @default(now())
-  budget               Int
-  description          String
-  requireVisit         Boolean
-  jobRequestId         Int
-  workerId             Int
-  jobRequest           JobRequest  @relation("JobRequestApplications", fields: [jobRequestId], references: [id])
-  worker               Worker      @relation(fields: [workerId], references: [id])
-  selectedByJobRequest JobRequest? @relation("SelectedApplication")
+  id                    Int      @id @default(autoincrement())
+  submittedAt           DateTime @default(now())
+  budget                Decimal @db.Decimal(10, 2)
+
+  description           String   @db.Text
+  requireVisit          Boolean
+
+  jobRequestId          Int
+  workerId              Int
+
+  jobRequest            JobRequest @relation("JobRequestApplications", fields: [jobRequestId], references: [id])
+  worker                Worker     @relation(fields: [workerId], references: [id])
+
+  selectedByJobRequest  JobRequest? @relation("SelectedApplication")
 
   @@map("applications")
 }

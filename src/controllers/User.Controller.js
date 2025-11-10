@@ -30,7 +30,7 @@ export const getUserById = async(req, res) => {
             return res.status(500).json({ message:"Error al encontrar el usuario" })
         };
 
-        res.status(200).json({ user });
+        res.status(200).json(user);
 
     } catch (error) {
         res.status(500).json({ message: "Error al consultar el servidor" })
