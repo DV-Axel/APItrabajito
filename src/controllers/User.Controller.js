@@ -127,36 +127,36 @@ export const updateUser = async (req, res) => {
 
 
 
-export const updateProfilePicture = async (req, res) => {
-    try {
-        const { id } = req.params;
-        if (!req.file) {
-            return res.status(400).json( { error: 'No se subió ninguna imagen' } );
-        }
-        //const imagePath = `/images/profilePicture/${req.file.filename}`;
+// export const updateProfilePicture = async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         if (!req.file) {
+//             return res.status(400).json( { error: 'No se subió ninguna imagen' } );
+//         }
+//         //const imagePath = `/images/profilePicture/${req.file.filename}`;
         
-        // Subir imagen a Supabase Storage usando la funcion utilitaria
+//         // Subir imagen a Supabase Storage usando la funcion utilitaria
 
-        const imageUrl = await uploadToSupabase({
-            bucket: 'profile-pictures',
-            filePath: req.file.path,
-            destinationPath: `${id}/${req.file.filename}`,
-            mimetype: req.file.mimetype
-        })
+//         const imageUrl = await uploadToSupabase({
+//             bucket: 'profile-pictures',
+//             filePath: req.file.path,
+//             destinationPath: `${id}/${req.file.filename}`,
+//             mimetype: req.file.mimetype
+//         })
 
-        const user = await prisma.user.update({
-            where: { id: Number(id) },
-            data: { profilePicture: imageUrl }
-        }); 
+//         const user = await prisma.user.update({
+//             where: { id: Number(id) },
+//             data: { profilePicture: imageUrl }
+//         }); 
 
-        res.json( { sucess: true, imageUrl, user });
-    } catch (error) {
-        if (req.file) {
-            deleteUploadedFiles([req.file]);
-        }
-        res.status(500).json( { error: error.message });
-    }
-}
+//         res.json( { sucess: true, imageUrl, user });
+//     } catch (error) {
+//         if (req.file) {
+//             deleteUploadedFiles([req.file]);
+//         }
+//         res.status(500).json( { error: error.message });
+//     }
+// }
 
 
 // para este metotdo es necesario agregar una columna en user (isActive), falta armar la ruta tambien
