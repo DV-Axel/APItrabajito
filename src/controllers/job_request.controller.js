@@ -185,12 +185,14 @@ export const getJobRequestsByUserId = async (req, res) => {
             where: { userId: Number(id) },
             // include: { user: true }
         });
-        if (jobRequests.length <= 0) {
-            return res.status(404).json({ error: 'JobRequests no encontrados para el usuario'})
-        }
-        res.json(jobRequests);
+        // if (jobRequests.length <= 0) {
+        //     return res.status(404).json({ error: 'JobRequests no encontrados para el usuario'})
+        // }
+        // res.json(jobRequests);
+        return res.status(200).json(jobRequests);
     } catch (error) {
         res.status(500).json( { error: error.message } );
+        //console.log(error);
     }
 }
 
