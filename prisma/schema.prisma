@@ -12,7 +12,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  //directUrl = env("DIRECT_URL")
+ // directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -179,12 +179,12 @@ model Product {
 }
 
 model JobRequest {
-  id                      Int      @id @default(autoincrement())
-  title                   String   @db.VarChar(70)
+  id                      Int       @id @default(autoincrement())
+  title                   String    @db.VarChar(70)
   urgency                 Boolean
-  jobCreationDate         DateTime @default(now())
+  jobCreationDate         DateTime  @default(now())
   date                    DateTime
-  description             String   @db.Text
+  description             String    @db.Text
   address                 Json
   propertyType            String
   floor                   String?
@@ -192,9 +192,12 @@ model JobRequest {
   position                Json
   extraData               Json?
   photos                  Json?
-  isVisible               Boolean  @default(true)
-  agreementWorker         Boolean @default(false)
-  agreementUser           Boolean @default(false)
+  isVisible               Boolean   @default(true)
+  agreementWorker         Boolean   @default(false)
+  agreementUser           Boolean   @default(false)
+  finalBudget             Decimal?  @db.Decimal(10, 2) @default(0)
+  workFinishedUser        Boolean   @default(false)
+  workFinishedWorker      Boolean   @default(false)
 
         
   user                    User @relation(fields: [userId], references: [id])
@@ -227,7 +230,8 @@ model Status {
 model Application {
   id                    Int      @id @default(autoincrement())
   submittedAt           DateTime @default(now())
-  budget                Int
+  budget                Decimal @db.Decimal(10, 2)
+
   description           String   @db.Text
   requireVisit          Boolean
 

@@ -185,12 +185,14 @@ export const getJobRequestsByUserId = async (req, res) => {
             where: { userId: Number(id) },
             // include: { user: true }
         });
-        if (jobRequests.length <= 0) {
-            return res.status(404).json({ error: 'JobRequests no encontrados para el usuario'})
-        }
-        res.json(jobRequests);
+        // if (jobRequests.length <= 0) {
+        //     return res.status(404).json({ error: 'JobRequests no encontrados para el usuario'})
+        // }
+        // res.json(jobRequests);
+        return res.status(200).json(jobRequests);
     } catch (error) {
         res.status(500).json( { error: error.message } );
+        //console.log(error);
     }
 }
 
@@ -320,3 +322,152 @@ export const getAplicationById = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+
+export const updateApplicationBudget = async (req, res) => {
+    try {
+        const { id } = req.params; // id de la Application en la URL
+        const { budget } = req.body;
+
+        if (!id || budget === undefined) {
+            return res.status(400).json({ error: "Faltan parámetros obligatorios (id o budget)" });
+        }
+
+        const application = await prisma.application.findUnique({
+            where: { id: Number(id) }
+        });
+
+        if (!application) {
+            return res.status(404).json({ error: "Application no encontrada" });
+        }
+
+        const finalBudgetValue = Number(budget);
+        if (Number.isNaN(finalBudgetValue)) {
+            return res.status(400).json({ error: "Budget inválido" });
+        }
+
+        const updatedApplication = await prisma.application.update({
+            where: { id: application.id },
+            data: {
+                budget: finalBudgetValue
+            }
+        });
+
+        return res.status(200).json({ message: "Budget de la aplicación actualizado", application: updatedApplication });
+    } catch (error) {
+        console.error("Error en setPresupuestoFinal:", error);
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+
+
+export const updateDateJobRequest = async (req, res) => {
+    try {
+        const { id } = req.params;
+        let { date } = req.body;
+
+        if (!id || date === undefined) {
+            return res.status(400).json({ error: "Faltan parámetros obligatorios (id o date)" });
+        }
+
+        // Si el body trae la fecha como stringified JSON, parsearla
+        date = parseIfString(date);
+
+        const newDate = new Date(date);
+        if (Number.isNaN(newDate.getTime())) {
+            return res.status(400).json({ error: "Fecha inválida" });
+        }
+
+        const jobRequest = await prisma.jobRequest.findUnique({
+            where: { id: Number(id) }
+        });
+
+        if (!jobRequest) {
+            return res.status(404).json({ error: "JobRequest no encontrado" });
+        }
+
+        const updatedJobRequest = await prisma.jobRequest.update({
+            where: { id: jobRequest.id },
+            data: { date: newDate }
+        });
+
+        return res.status(200).json({ message: "Fecha actualizada correctamente", jobRequest: updatedJobRequest });
+    } catch (error) {
+        console.error("Error en updateDateJobRequest:", error);
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+// javascript
+export const setFinalBudget = async (req, res) => {
+    try {
+        const { id } = req.params;
+        let { finalBudget } = req.body;
+
+        if (!id || finalBudget === undefined) {
+            return res.status(400).json({ error: "Faltan parámetros obligatorios (id o finalBudget)" });
+        }
+
+        // Manejar casos donde venga como stringified JSON u otros formatos
+        finalBudget = parseIfString(finalBudget);
+
+        const finalBudgetValue = Number(finalBudget);
+        if (Number.isNaN(finalBudgetValue)) {
+            return res.status(400).json({ error: "finalBudget inválido" });
+        }
+
+        const jobRequest = await prisma.jobRequest.findUnique({
+            where: { id: Number(id) }
+        });
+
+        if (!jobRequest) {
+            return res.status(404).json({ error: "JobRequest no encontrado" });
+        }
+
+        const updatedJobRequest = await prisma.jobRequest.update({
+            where: { id: jobRequest.id },
+            data: {
+                finalBudget: finalBudgetValue
+            }
+        });
+
+        return res.status(200).json({ message: "FinalBudget actualizado", jobRequest: updatedJobRequest });
+    } catch (error) {
+        console.error("Error en setFinalBudget:", error);
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+
+// javascript
+export const setConfirmJobRequestFinalized = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { entidad } = req.body;
+
+        if (!id || !entidad) {
+            return res.status(400).json({ error: "Faltan parámetros obligatorios" });
+        }
+
+        let updateData = {};
+        if (entidad === "user") {
+            updateData.workFinishedUser = true;
+        } else if (entidad === "worker") {
+            updateData.workFinishedWorker = true;
+        } else {
+            return res.status(400).json({ error: "Entidad inválida" });
+        }
+
+        const jobRequest = await prisma.jobRequest.update({
+            where: { id: Number(id) },
+            data: updateData
+        });
+
+        res.status(200).json({ message: 'Confirmación de finalización registrada correctamente', jobRequest });
+    } catch (error) {
+        console.error("Error en setConfirmJobRequestFinalized:", error);
+        res.status(500).json({ error: error.message });
+    }
+};
+

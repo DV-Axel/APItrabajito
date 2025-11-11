@@ -3,8 +3,7 @@ import bcrypt from "bcryptjs";
 import { generateToken, verifyToken } from "../utils/jwt.js";
 import { buildConfirUrl } from "../utils/url.js";
 import { transporter } from "../utils/mailer.js";
-
-
+import { getWelcomeEmailHtml } from "../utils/emailTemplates.js";
 
 export const signup = async(req, res) => {
     try {
@@ -80,11 +79,10 @@ export const signup = async(req, res) => {
         await transporter.sendMail({
             from: "TRABAJITO APP",
             to: email,
-            subject: "Confirma tu correo",
-            html: `<p>Hola ${ firstName }, </p>
-                   <p>Por favor confirma tu correo haciendo click en el siguiente enlace:</p>
-                   <a href="${confirmUrl}">Confirmar correo</a>`,
+            subject: "Confirma tu correo y accede a todas las soluciones",
+            html: getWelcomeEmailHtml(firstName, confirmUrl),
         });
+
         console.log(confirmUrl);
         
         res.status(200).json({ message: "Usuario creado. Revisa tu correo para confirmar tu cuenta" });
