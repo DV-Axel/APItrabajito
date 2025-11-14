@@ -13,6 +13,72 @@ export const getAllUsers = async (req, res) => {
     }
 }
 
+// javascript
+export const updateDataUser = async (req, res) => {
+    const { id } = req.params;
+    if (isNaN(id)) {
+        return res.status(400).json({ message: "El id debe ser un número válido" });
+    }
+
+    const { atributo } = req.body;
+    if (!atributo) {
+        return res.status(400).json({ message: "Falta el campo 'atributo' en el body" });
+    }
+
+    try {
+        const existingUser = await prisma.user.findUnique({ where: { id: Number(id) } });
+        if (!existingUser) return res.status(404).json({ error: "Usuario no encontrado" });
+
+        const updateData = {};
+
+        if (atributo === 'address') {
+            // Espera body con { atributo, address, number, departmentNumber? }
+            const { address, number, departmentNumber } = req.body;
+            if (address === undefined || address === null || String(address).trim() === '') {
+                return res.status(400).json({ error: "Falta el campo 'address' para actualizar" });
+            }
+            if (number === undefined || number === null || String(number).trim() === '') {
+                return res.status(400).json({ error: "Falta el campo 'number' para actualizar" });
+            }
+
+            updateData.address = String(address);
+            // en la BD 'number' es String, se guarda como tal
+            updateData.number = String(number);
+            // Si viene explícito null se respeta, si viene undefined se deja null
+            updateData.departmentNumber = departmentNumber === undefined ? null : departmentNumber;
+        } else if (atributo === 'phone') {
+            // Espera body con { atributo, valor }
+            const { valor } = req.body;
+            if (valor === undefined) return res.status(400).json({ error: "Falta el campo 'valor' para phone" });
+            const phoneNum = Number(valor);
+            if (isNaN(phoneNum)) return res.status(400).json({ error: "El valor de phone debe ser numérico" });
+            updateData.phone = phoneNum;
+        } else if (
+            atributo === 'postalCode' ||
+            atributo === 'postal' ||
+            atributo === 'postal_code' ||
+            atributo === 'codigoPostal' ||
+            atributo === 'codigoPosta'
+        ) {
+            const { valor } = req.body;
+            if (valor === undefined) return res.status(400).json({ error: "Falta el campo 'valor' para postal code" });
+            updateData.postalCode = String(valor);
+        } else {
+            return res.status(400).json({ error: "Atributo no soportado para actualización" });
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: Number(id) },
+            data: updateData
+        });
+
+        res.status(200).json({ success: true, user: updatedUser });
+    } catch (error) {
+        console.error("Error en updateDataUser:", error);
+        res.status(500).json({ error: "Error al actualizar usuario", details: error.message });
+    }
+};
+
 
 
 export const getUserById = async(req, res) => {
