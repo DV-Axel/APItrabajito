@@ -157,4 +157,44 @@ export const getServicesByCategory = async (req, res) => {
     }
 }
 
+// javascript
+export const getApplicationsByWorkerId = async (req, res) => {
+    const { id } = req.params;
 
+    const workerId = Number(id);
+    if (!id || Number.isNaN(workerId)) {
+        return res.status(400).json({ message: "ID de worker inválido" });
+    }
+
+    try {
+        const applications = await prisma.application.findMany({
+            where: { workerId },
+            include: {
+                jobRequest: {
+                    select: {
+                        id: true,
+                        title: true,
+                        date: true,
+                        finalBudget: true,
+                        statusId: true,
+                        userId: true
+                    }
+                },
+                worker: {
+                    select: {
+                        id: true,
+                        userId: true,
+                        subtitle: true,
+                        profilePicture: true
+                    }
+                }
+            },
+            orderBy: [{ submittedAt: 'desc' }]
+        });
+
+        return res.status(200).json(applications);
+    } catch (error) {
+        console.error("Error en getApplicationsByWorkerId:", error);
+        return res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
