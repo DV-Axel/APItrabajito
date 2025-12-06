@@ -158,9 +158,8 @@ export const getServicesByCategory = async (req, res) => {
 }
 
 // javascript
-export const getApplicationsByWorkerId = async (req, res) => {
+export const getJobRequestsAppliedByWorkerId = async (req, res) => {
     const { id } = req.params;
-
     const workerId = Number(id);
     if (!id || Number.isNaN(workerId)) {
         return res.status(400).json({ message: "ID de worker inválido" });
@@ -174,27 +173,40 @@ export const getApplicationsByWorkerId = async (req, res) => {
                     select: {
                         id: true,
                         title: true,
+                        jobCreationDate: true,
                         date: true,
+                        description: true,
+                        address: true,
                         finalBudget: true,
                         statusId: true,
-                        userId: true
-                    }
-                },
-                worker: {
-                    select: {
-                        id: true,
                         userId: true,
-                        subtitle: true,
-                        profilePicture: true
+                        serviceKey: true,
+                        photos: true,
+                        isVisible: true
                     }
                 }
             },
             orderBy: [{ submittedAt: 'desc' }]
         });
 
-        return res.status(200).json(applications);
+        // Mapear a jobRequests, agregando datos de la aplicación y evitando duplicados
+        const seen = new Set();
+        const jobRequests = [];
+        for (const app of applications) {
+            const jr = app.jobRequest;
+            if (!jr || seen.has(jr.id)) continue;
+            seen.add(jr.id);
+            jobRequests.push({
+                ...jr,
+                appliedAt: app.submittedAt,
+                applicationId: app.id,
+                applicationBudget: app.budget
+            });
+        }
+
+        return res.status(200).json(jobRequests);
     } catch (error) {
-        console.error("Error en getApplicationsByWorkerId:", error);
+        console.error("Error en getJobRequestsAppliedByWorkerId:", error);
         return res.status(500).json({ message: "Error interno del servidor" });
     }
 };

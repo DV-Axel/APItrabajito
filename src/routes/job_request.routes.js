@@ -13,7 +13,8 @@ import {
     updateApplicationBudget,
     updateDateJobRequest,
     setFinalBudget,
-    setConfirmJobRequestFinalized
+    setConfirmJobRequestFinalized,
+    setRateService
 
 } from "../controllers/job_request.controller.js";
 import { uploadJobRequestPhotos } from '../middlewares/images/updateJobRequestPhotos.js';
@@ -35,6 +36,7 @@ jobRequestRouter.put("/cambiar-presupuesto-postulacion/:id", updateApplicationBu
 jobRequestRouter.put("/cambiar-fecha-servicio/:id", updateDateJobRequest);
 jobRequestRouter.put("/establecer-presupuesto-final/:id", setFinalBudget);
 jobRequestRouter.put("/confirmar-servicio-finalizado/:id", setConfirmJobRequestFinalized);
+jobRequestRouter.post("/calificar-servicio/:id", setRateService);
 
 
 jobRequestRouter.get("/:id", validateSchema(idSchema, "params"), getJobRequestsByUserId);

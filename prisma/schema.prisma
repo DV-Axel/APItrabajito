@@ -198,6 +198,8 @@ model JobRequest {
   finalBudget             Decimal?  @db.Decimal(10, 2) @default(0)
   workFinishedUser        Boolean   @default(false)
   workFinishedWorker      Boolean   @default(false)
+  userRatingForWorker     Int?
+  userCommentForWorker    String?   @db.Text
 
         
   user                    User @relation(fields: [userId], references: [id])

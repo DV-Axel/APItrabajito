@@ -360,6 +360,80 @@ export const updateApplicationBudget = async (req, res) => {
     }
 };
 
+// javascript
+export const setRateService = async (req, res) => {
+    const { id } = req.params;
+    let { rating, comment } = req.body;
+
+    try {
+        if (!id) return res.status(400).json({ error: "Falta el parámetro id" });
+
+        // Normalizar y validar rating
+        rating = Number(rating);
+        if (Number.isNaN(rating) || rating < 0 || rating > 5) {
+            return res.status(400).json({ error: "Rating inválido (debe ser número entre 0 y 5)" });
+        }
+
+        // Obtener applicationSelectedId desde JobRequest
+        const jr = await prisma.jobRequest.findUnique({
+            where: { id: Number(id) },
+            select: { applicationSelectedId: true }
+        });
+        if (!jr) return res.status(404).json({ error: "JobRequest no encontrado" });
+        if (!jr.applicationSelectedId) return res.status(400).json({ error: "JobRequest no tiene una aplicación seleccionada" });
+
+        // Obtener workerId desde Application
+        const application = await prisma.application.findUnique({
+            where: { id: jr.applicationSelectedId },
+            select: { workerId: true }
+        });
+        if (!application) return res.status(404).json({ error: "Application seleccionada no encontrada" });
+
+        const workerId = application.workerId;
+
+        // Obtener datos actuales del worker
+        const worker = await prisma.worker.findUnique({
+            where: { id: workerId },
+            select: { rating: true, jobsCompleted: true }
+        });
+        if (!worker) return res.status(404).json({ error: "Worker no encontrado" });
+
+        // Extraer valor numérico seguro del rating (Prisma Decimal)
+        const currentRating = worker.rating != null
+            ? (typeof worker.rating === 'object' && typeof worker.rating.toNumber === 'function'
+                ? worker.rating.toNumber()
+                : Number(worker.rating))
+            : 0;
+        const currentJobs = Number(worker.jobsCompleted || 0);
+        const newJobs = currentJobs + 1;
+        const newRating = ((currentRating * currentJobs) + rating) / newJobs;
+
+        // Ejecutar actualizaciones en transacción
+        const [updatedJobRequest, updatedWorker] = await prisma.$transaction([
+            prisma.jobRequest.update({
+                where: { id: Number(id) },
+                data: {
+                    userRatingForWorker: rating,
+                    userCommentForWorker: comment ?? null
+                }
+            }),
+            prisma.worker.update({
+                where: { id: workerId },
+                data: {
+                    jobsCompleted: { increment: 1 },
+                    rating: newRating
+                }
+            })
+        ]);
+
+        return res.status(200).json({ message: "Calificación registrada", jobRequest: updatedJobRequest, worker: updatedWorker });
+    } catch (error) {
+        console.error("Error en setRateService:", error);
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+
 
 
 export const updateDateJobRequest = async (req, res) => {
