@@ -4,9 +4,11 @@ import { prisma } from "../src/data/prisma.js";
 async function main() {
     // Estados
     const statuses = [
-        { name: 'Pendiente'},
-        { name: 'En progeso'},
-        { name: 'Completado'},
+        { name: 'Buscando worker'},
+        { name: 'En contacto'},
+        { name: 'En progreso'},
+        { name: 'Esperando calificacion'},
+        { name: 'Finalizado'},
         { name: 'Cancelado'}
     ];
     for (const status of statuses) {

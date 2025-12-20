@@ -90,6 +90,7 @@ export const getAllJobRequests = async (req, res) => {
 };
 
 
+// javascript
 export const setMutualAgreement = async (req, res) => {
     try {
         const { id } = req.params;
@@ -99,23 +100,42 @@ export const setMutualAgreement = async (req, res) => {
             return res.status(400).json({ error: "Faltan parámetros obligatorios" });
         }
 
-        let updateData = {};
-        if (entidad === "user") {
-            updateData.agreementUser = true;
-        } else if (entidad === "worker") {
-            updateData.agreementWorker = true;
-        } else {
+        if (entidad !== "user" && entidad !== "worker") {
             return res.status(400).json({ error: "Entidad inválida" });
         }
 
-        const jobRequest = await prisma.jobRequest.update({
+        const jobRequest = await prisma.jobRequest.findUnique({
+            where: { id: Number(id) },
+            select: { agreementUser: true, agreementWorker: true }
+        });
+
+        if (!jobRequest) {
+            return res.status(404).json({ error: "JobRequest no encontrado" });
+        }
+
+        // Calcular nuevos valores según la entidad
+        const newAgreementUser = entidad === "user" ? true : jobRequest.agreementUser;
+        const newAgreementWorker = entidad === "worker" ? true : jobRequest.agreementWorker;
+
+        const updateData = {
+            agreementUser: newAgreementUser,
+            agreementWorker: newAgreementWorker
+        };
+
+        // Si ambos acuerdos son true, poner statusId a 3 (en progreso)
+        if (newAgreementUser && newAgreementWorker) {
+            updateData.statusId = 3;
+        }
+
+        const updatedJobRequest = await prisma.jobRequest.update({
             where: { id: Number(id) },
             data: updateData
         });
 
-        res.status(200).json({ message: 'Acuerdo mutuo registrado correctamente', jobRequest });
+        return res.status(200).json({ message: 'Acuerdo mutuo registrado correctamente', jobRequest: updatedJobRequest });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("Error en setMutualAgreement:", error);
+        return res.status(500).json({ error: error.message });
     }
 };
 
@@ -360,7 +380,7 @@ export const updateApplicationBudget = async (req, res) => {
     }
 };
 
-// javascript
+
 export const setRateService = async (req, res) => {
     const { id } = req.params;
     let { rating, comment } = req.body;
@@ -408,13 +428,14 @@ export const setRateService = async (req, res) => {
         const newJobs = currentJobs + 1;
         const newRating = ((currentRating * currentJobs) + rating) / newJobs;
 
-        // Ejecutar actualizaciones en transacción
+        // Ejecutar actualizaciones en transacción (incluye statusId = 5)
         const [updatedJobRequest, updatedWorker] = await prisma.$transaction([
             prisma.jobRequest.update({
                 where: { id: Number(id) },
                 data: {
                     userRatingForWorker: rating,
-                    userCommentForWorker: comment ?? null
+                    userCommentForWorker: comment ?? null,
+                    statusId: 5
                 }
             }),
             prisma.worker.update({
@@ -524,24 +545,39 @@ export const setConfirmJobRequestFinalized = async (req, res) => {
             return res.status(400).json({ error: "Faltan parámetros obligatorios" });
         }
 
-        let updateData = {};
-        if (entidad === "user") {
-            updateData.workFinishedUser = true;
-        } else if (entidad === "worker") {
-            updateData.workFinishedWorker = true;
-        } else {
+        if (entidad !== "user" && entidad !== "worker") {
             return res.status(400).json({ error: "Entidad inválida" });
         }
 
-        const jobRequest = await prisma.jobRequest.update({
+        const jobRequest = await prisma.jobRequest.findUnique({
+            where: { id: Number(id) },
+            select: { workFinishedUser: true, workFinishedWorker: true }
+        });
+
+        if (!jobRequest) {
+            return res.status(404).json({ error: "JobRequest no encontrado" });
+        }
+
+        const newWorkFinishedUser = entidad === "user" ? true : jobRequest.workFinishedUser;
+        const newWorkFinishedWorker = entidad === "worker" ? true : jobRequest.workFinishedWorker;
+
+        const updateData = {
+            workFinishedUser: newWorkFinishedUser,
+            workFinishedWorker: newWorkFinishedWorker
+        };
+
+        if (newWorkFinishedUser && newWorkFinishedWorker) {
+            updateData.statusId = 4;
+        }
+
+        const updatedJobRequest = await prisma.jobRequest.update({
             where: { id: Number(id) },
             data: updateData
         });
 
-        res.status(200).json({ message: 'Confirmación de finalización registrada correctamente', jobRequest });
+        return res.status(200).json({ message: "Confirmación registrada correctamente", jobRequest: updatedJobRequest });
     } catch (error) {
         console.error("Error en setConfirmJobRequestFinalized:", error);
-        res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: error.message });
     }
 };
-

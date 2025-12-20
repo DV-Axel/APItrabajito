@@ -289,6 +289,7 @@ export const desactivateAccount = async(req, res) => {
 }
 
 
+// javascript
 export const selectWorker = async (req, res) => {
     const { jobRequestId, postulationId } = req.body;
 
@@ -296,10 +297,17 @@ export const selectWorker = async (req, res) => {
         return res.status(400).json({ error: "Faltan datos requeridos" });
     }
 
+    if (isNaN(jobRequestId) || isNaN(postulationId)) {
+        return res.status(400).json({ error: "Los ids deben ser numéricos" });
+    }
+
     try {
         const jobRequest = await prisma.jobRequest.update({
             where: { id: Number(jobRequestId) },
-            data: { applicationSelectedId: Number(postulationId) }
+            data: {
+                applicationSelectedId: Number(postulationId),
+                statusId: 2
+            }
         });
 
         res.status(200).json({ message: "Postulación seleccionada correctamente", jobRequest });
