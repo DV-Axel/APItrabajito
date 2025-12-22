@@ -9,7 +9,8 @@ async function main() {
         { name: 'En progreso'},
         { name: 'Esperando calificacion'},
         { name: 'Finalizado'},
-        { name: 'Cancelado'}
+        { name: 'Cancelado'},
+        { name: 'Esperando pago MercadoPago'}
     ];
     for (const status of statuses) {
         await prisma.status.upsert({
@@ -168,6 +169,22 @@ async function main() {
             }
         });
     }
+
+    // javascript
+// Crear payment methods (reemplaza el bloque actual en `prisma/seed.js`)
+    const paymentMethods = [
+        { name: "Efectivo" },
+        { name: "MercadoPago" }
+    ];
+    const paymentMethodMap = {};
+    for (const pm of paymentMethods) {
+        let dbPm = await prisma.paymentMethod.findFirst({ where: { name: pm.name } });
+        if (!dbPm) {
+            dbPm = await prisma.paymentMethod.create({ data: pm });
+        }
+        paymentMethodMap[pm.name] = dbPm.id;
+    }
+
 
     // Usuarios
     const users = [
@@ -348,9 +365,21 @@ async function main() {
     ];
 
 // Inserción en el seed
+    // prisma/seed.js (fragmento)
     for (const job of jobRequests) {
-        await prisma.jobRequest.create({ data: job });
+        const { userId, statusId, serviceKey, paymentMethodId, ...rest } = job;
+        const pmId = paymentMethodId ?? paymentMethodMap["Efectivo"]; // default si no viene
+        await prisma.jobRequest.create({
+            data: {
+                ...rest,
+                user: { connect: { id: userId } },
+                status: { connect: { id: statusId } },
+                service: { connect: { id: serviceKey } },
+                paymentMethod: { connect: { id: pmId } }
+            }
+        });
     }
+
 
 
 }

@@ -3,10 +3,13 @@ import { parseIfString } from "../data/helpers.js";
 import { deleteUploadedFiles } from "../utils/fileUtils.js";
 
 
+// javascript
 export const createJobRequest = async (req, res) => {
+
+
+
+
     try {
-
-
         const {
             serviceKey,
             form,
@@ -15,10 +18,14 @@ export const createJobRequest = async (req, res) => {
             floor,
             aparmentNumber,
             position,
-            userId
+            userId,
+            paymentMethodId
         } = req.body;
 
-    
+        if (!serviceKey || !userId || !paymentMethodId) {
+            return res.status(400).json({ error: 'Faltan serviceKey, userId o paymentMethodId' });
+        }
+
         // Parsear si vienen como string (form-data)
         const parsedForm = parseIfString(form);
         const parsedAddress = parseIfString(address);
@@ -26,22 +33,20 @@ export const createJobRequest = async (req, res) => {
 
         // Procesar fotos subidas (si llegan como archivos)
         let photos = [];
-        if(req.files && req.files.length > 0){
+        if (req.files && req.files.length > 0) {
             let notes = req.body.notes || [];
-            if(!Array.isArray(notes)) notes = [notes];
+            if (!Array.isArray(notes)) notes = [notes];
 
-            photos = req.files.map( (file, index) => ({
+            photos = req.files.map((file, index) => ({
                 name: file.originalname,
                 url: `/images/jobRequests/${file.filename}`,
                 note: notes[index] || ''
             }));
-
-        } else if (req.body.photos){
-            // Si el fronten envia un array de fotos como JSON string
+        } else if (req.body.photos) {
             photos = parseIfString(req.body.photos);
         }
 
-        const extraData = { ...parsedForm};
+        const extraData = { ...parsedForm };
         delete extraData.titulo;
         delete extraData.urgencia;
         delete extraData.fecha;
@@ -49,9 +54,9 @@ export const createJobRequest = async (req, res) => {
 
         const jobRequest = await prisma.jobRequest.create({
             data: {
-                serviceKey: Number(serviceKey),
+                // Campos escalares
                 title: parsedForm.titulo,
-                urgency: parsedForm.urgencia === "si" || parsedForm.urgencia === true ? true : false,                
+                urgency: parsedForm.urgencia === "si" || parsedForm.urgencia === true,
                 jobCreationDate: new Date(),
                 date: new Date(parsedForm.fecha),
                 description: parsedForm.descripcion,
@@ -62,10 +67,14 @@ export const createJobRequest = async (req, res) => {
                 position: parsedPosition,
                 extraData,
                 photos,
-                userId: Number(userId),
-                statusId: 1
+                // Relaciones requeridas: usar connect
+                user: { connect: { id: Number(userId) } },
+                status: { connect: { id: 1 } }, // si siempre es 1 al crear
+                service: { connect: { id: Number(serviceKey) } },
+                paymentMethod: { connect: { id: Number(paymentMethodId) } }
             }
         });
+
         res.status(200).json(jobRequest);
     } catch (error) {
         deleteUploadedFiles(req.files);
@@ -73,6 +82,7 @@ export const createJobRequest = async (req, res) => {
         res.status(500).json({ error: "Imposible crear JobRequest" });
     }
 };
+
 
 
 
@@ -166,7 +176,47 @@ export const setCancelMutualAgreement = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+}
+
+// javascript
+export const setChangeMethodPayment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { paymentMethodId } = req.body;
+
+        if (!id || !paymentMethodId) {
+            return res.status(400).json({ error: "Faltan parámetros obligatorios (id o paymentMethodId)" });
+        }
+
+        const jobRequest = await prisma.jobRequest.findUnique({
+            where: { id: Number(id) }
+        });
+        if (!jobRequest) {
+            return res.status(404).json({ error: "JobRequest no encontrado" });
+        }
+
+        const paymentMethod = await prisma.paymentMethod.findUnique({
+            where: { id: Number(paymentMethodId) }
+        });
+        if (!paymentMethod) {
+            return res.status(404).json({ error: "PaymentMethod no encontrado" });
+        }
+
+        const updatedJobRequest = await prisma.jobRequest.update({
+            where: { id: Number(id) },
+            data: {
+                paymentMethod: { connect: { id: Number(paymentMethodId) } }
+            },
+            include: { paymentMethod: true }
+        });
+
+        return res.status(200).json({ message: "Método de pago actualizado", jobRequest: updatedJobRequest });
+    } catch (error) {
+        console.error("Error en setChangeMethodPayment:", error);
+        return res.status(500).json({ error: error.message });
+    }
 };
+
 
 
 
@@ -179,7 +229,7 @@ export const getJobRequestById = async (req, res) => {
         const { id } = req.params;
         const jobRequest = await prisma.jobRequest.findUnique({
             where: { id: Number(id) },
-            include: { user: true, service: true}
+            include: { user: true, service: true, paymentMethod: true  }
         });
         if (!jobRequest) {
             return res.status(404).json({ error: 'JobRequest no encontrado' });

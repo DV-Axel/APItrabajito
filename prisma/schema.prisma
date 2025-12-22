@@ -178,6 +178,15 @@ model Product {
   @@map("products")
 }
 
+model PaymentMethod {
+  id          Int          @id @default(autoincrement())
+  name        String       @db.VarChar(45) @unique
+
+  jobRequests  JobRequest[]
+
+  @@map("payment_methods")
+}
+
 model JobRequest {
   id                      Int       @id @default(autoincrement())
   title                   String    @db.VarChar(70)
@@ -215,6 +224,9 @@ model JobRequest {
   applicationSelectedId   Int? @unique
 
   applications            Application[] @relation("JobRequestApplications")
+
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  paymentMethodId Int
 
   @@map("job_requests")
 }
