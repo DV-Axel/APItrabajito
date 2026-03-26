@@ -110,23 +110,23 @@ export const confirmEmail = async(req, res) => {
 
         const userId = decoded.userId;
        
-        const user = await prisma.user.findUnique({ where: { id: userId }});
+        const usuario = await prisma.usuario.findUnique({ where: { id: userId }});
         
-        if (!user) {
+        if (!usuario) {
             return res.status(404).json({ message: "Usuario no encontrado"});
         }
 
-        if (user.isVerified) {
+        if (usuario.cuentaVerificada) {
             return res.status(400).json({ message: "El usuario ya fue confirmado"});
         }
 
         // Busca y actualiza el usuario
-        const updateUser = await prisma.user.update({
+        const actualizarCuentaVerificada = await prisma.usuario.update({
             where: { id: userId },
-            data: { isVerified: true},
+            data: { cuentaVerificada: true},
         });
 
-        res.status(200).json({ message: "Correo confirmado correctamente", updateUser });
+        res.status(200).json({ message: "Correo confirmado correctamente", actualizarCuentaVerificada });
     } catch (error) {
         res.status(400).json({ message: "Token inválido o expirado", error: error.message });
     }
@@ -135,48 +135,57 @@ export const confirmEmail = async(req, res) => {
 
 
 
-export const login = async(req, res) => {
+export const login = async (req, res) => {
     const { email, password } = req.body;
 
     console.log("Intento de login con email: ", email);
-    console.log("Intento de login con password: ", password)
+    console.log("Intento de login con password: ", password);
 
     try {
-
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) {
-            return res.status(400).json( { message: "Usuario no encontrado"} );
+        const usuario = await prisma.usuario.findUnique({ where: { email } });
+        if (!usuario) {
+            return res.status(400).json({ message: "Usuario no encontrado" });
         }
 
-        if (!user.isVerified) {
-            return res.status(403).json( { message: "Debes confirmar tu correo antes de iniciar sesión" });
+        if (!usuario.cuentaVerificada) {
+            return res
+                .status(403)
+                .json({ message: "Debes confirmar tu correo antes de iniciar sesión" });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(password, usuario.password);
         if (!isMatch) {
-            return res.status(400).json( { message: "Correo Electrónico o Password Incorrectos" });
+            return res
+                .status(400)
+                .json({ message: "Correo Electrónico o Password Incorrectos" });
         }
 
-        const token = generateToken({ userId: user.id }, "2h");
+        const token = generateToken({ userId: usuario.id }, "2h");
 
-        // Esto es para que asocie si es worker o no
+        // Cambiar userId -> usuarioId, que es el campo real en el modelo Worker
         const worker = await prisma.worker.findUnique({
-            where: { userId: user.id }
+            where: { usuarioId: usuario.id },
         });
         const isWorker = !!worker;
 
         res.status(200).json({
             message: "Login exitoso",
             token,
-            user: { id: user.id, email: user.email, nombre: user.firstName, apellido: user.lastName, isWorker },
+            usuario: {
+                id: usuario.id,
+                email: usuario.email,
+                nombre: usuario.nombre,
+                apellido: usuario.apellido,
+                isWorker,
+            },
         });
-        console.log(user);
-        
     } catch (error) {
         console.error("Login error: ", error);
-        res.status(500).json({ message: "Error en el login", error: error });
+        res
+            .status(500)
+            .json({ message: "Error en el login", error: error.message });
     }
-}
+};
 
 
 
