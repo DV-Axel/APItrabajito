@@ -8,34 +8,34 @@ import { getWelcomeEmailHtml } from "../utils/emailTemplates.js";
 export const signup = async(req, res) => {
     try {
         const {
-            firstName,
-            lastName,
-            dni,
+            nombre,
+            apellido,
+            numeroDocumento,
             email,
-            birthDate,
+            fechaNacimiento,
             password,
-            phone,
-            address,
-            number,
-            departmentNumber, 
-            postalCode,
-            idType,
+            telefono,
+            calle,
+            numeroCalle,
+            numeroDepartamento,
+            codigoPostal,
+            tipoDocumento,
             } = req.body;
 
 
         //TODO: ver si las validaciones se pueden hacer con algun paquete externo
         //Etapa de validaciones
         // Validar que el usuario sea mayor de 18 años
-        const birth = new Date(birthDate);
+        const birth = new Date(fechaNacimiento);
         const today = new Date();
         const age = today.getFullYear() - birth.getFullYear();
         const m = today.getMonth() - birth.getMonth();
         if (age < 18 || (age === 18 && m < 0) || (age === 18 && m === 0 && today.getDate() < birth.getDate())) {
             return res.status(400).json({ message: "Debes ser mayor de 18 años para registrarte" });
         }
-            
+
         // Verificar si el usuario existe
-        const existingUser = await prisma.user.findUnique({ where: { email } });
+        const existingUser = await prisma.usuario.findUnique({ where: { email } });
         if ( existingUser ) {
             return res.status(400).json({ message: "El email ya está registrado" });
         }
@@ -52,41 +52,42 @@ export const signup = async(req, res) => {
         // Hashea la constraseña
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Crear el usuario con isVerified: false
-        const newUser = await prisma.user.create({
+        // Crear el usuario con cuentaVerificada: false
+        const newUser = await prisma.usuario.create({
             data: {
-                firstName,
-                lastName,
-                dni,
+                nombre,
+                apellido,
+                numeroDocumento,
                 email,
-                birthDate: new Date(birthDate),
+                fechaNacimiento: new Date(fechaNacimiento),
                 password: hashedPassword,
-                phone: Number(phone),
-                registrationDate: new Date(),
-                isVerified: false,
-                address,
-                number, 
-                departmentNumber,
-                postalCode,
-                idType,
-                profilePicture: '/images/profilePicture/avatar.jpeg'
+                telefono: Number(telefono),
+                fechaRegistro: new Date(),
+                cuentaVerificada: false,
+                calle,
+                numeroCalle,
+                numeroDepartamento,
+                codigoPostal,
+                tipoDocumento,
+                fotoPerfilUsuario: '/images/profilePicture/avatar.jpeg'
             }
         });
 
-        const token = generateToken({ userId: newUser.id });
+        const token = generateToken({ userId: newUser.id }, "1d");
         const confirmUrl = buildConfirUrl( token );
+        const correoRegistrado = newUser.email;
 
         await transporter.sendMail({
             from: "TRABAJITO APP",
             to: email,
             subject: "Confirma tu correo y accede a todas las soluciones",
-            html: getWelcomeEmailHtml(firstName, confirmUrl),
+            html: getWelcomeEmailHtml(nombre, confirmUrl, correoRegistrado),
         });
 
         console.log(confirmUrl);
-        
+
         res.status(200).json({ message: "Usuario creado. Revisa tu correo para confirmar tu cuenta" });
-                
+
         } catch (error) {
             console.error("signup error:", error);
             res.status(500).json({ message: "Error en el registro de usuario", error: error.message });
@@ -136,6 +137,9 @@ export const confirmEmail = async(req, res) => {
 
 export const login = async(req, res) => {
     const { email, password } = req.body;
+
+    console.log("Intento de login con email: ", email);
+    console.log("Intento de login con password: ", password)
 
     try {
 

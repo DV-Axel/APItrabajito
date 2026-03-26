@@ -1,7 +1,4 @@
-
-
-
 export function buildConfirUrl(token){
-    const baseUrl = "http://localhost:5175";
-    return `${ baseUrl }/validacion?token=${ token }`;
+    const baseUrl = "http://localhost:5173";
+    return `${ baseUrl }/cuenta-verificada?token=${ token }`;
 }
