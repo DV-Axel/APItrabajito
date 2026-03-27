@@ -3,10 +3,11 @@ import bcrypt from "bcryptjs";
 import {generateToken, verifyToken} from "../utils/jwt.js";
 import {buildConfirUrl} from "../utils/url.js";
 import {transporter} from "../utils/mailer.js";
-import {getWelcomeEmailHtml} from "../utils/emailTemplates.js";
+import {getCorreoDeBienvenida} from "../utils/emailTemplates.js";
 import {envioCorreoToken} from "../data/envioCorreoToken.js";
+import {envioCorreoResetPassword} from "../data/envioCorreoResetPassword.js";
 
-export const signup = async (req, res) => {
+export const registrarUsuario = async (req, res) => {
     try {
         const {
             nombre,
@@ -74,7 +75,7 @@ export const signup = async (req, res) => {
         });
 
         //Aqui hago el envio del correo de confirmacion.
-        const { token, confirmUrl } = await envioCorreoToken(
+        const {token, confirmUrl} = await envioCorreoToken(
             {
                 id: usuarioCreado.id,
                 email: usuarioCreado.email,
@@ -83,7 +84,7 @@ export const signup = async (req, res) => {
             "1d"
         );
 
-        console.log({ token, confirmUrl });
+        console.log({token, confirmUrl});
 
 
         res.status(200).json({
@@ -120,7 +121,7 @@ export const reenviarConfirmacion = async (req, res) => {
         if (usuario.cuentaVerificada) {
             return res
                 .status(400)
-                .json({message: "El usuario ya fue confirmado"});
+                .json({message: "El usuario ya fue confirmado anteriormente"});
         }
 
         // Volver a enviar el correo de confirmación
@@ -148,7 +149,7 @@ export const reenviarConfirmacion = async (req, res) => {
 };
 
 
-export const confirmEmail = async (req, res) => {
+export const confirmarCuenta = async (req, res) => {
     const {token} = req.query;
 
     try {
@@ -169,17 +170,32 @@ export const confirmEmail = async (req, res) => {
             return res.status(400).json({message: "El usuario ya fue confirmado"});
         }
 
-        // Busca y actualiza el usuario
         const actualizarCuentaVerificada = await prisma.usuario.update({
             where: {id: userId},
             data: {cuentaVerificada: true},
         });
 
-        res.status(200).json({message: "Correo confirmado correctamente", actualizarCuentaVerificada});
+        return res.status(200).json({
+            message: "Correo confirmado correctamente",
+            actualizarCuentaVerificada,
+        });
     } catch (error) {
-        res.status(400).json({message: "Token inválido o expirado", error: error.message});
+        // Manejo específico para token expirado
+        if (error.name === "TokenExpiredError") {
+            return res.status(401).json({
+                message: "Token expirado",
+                code: "TOKEN_EXPIRED",
+            });
+        }
+
+        // Otros errores de token
+        return res.status(400).json({
+            message: "Token inválido o error al confirmar",
+            code: "TOKEN_INVALID",
+            error: error.message,
+        });
     }
-}
+};
 
 
 export const login = async (req, res) => {
@@ -235,99 +251,68 @@ export const login = async (req, res) => {
 };
 
 
-export const resendConfirmation = async (req, res) => {
+export const contraseñaOlvidada = async (req, res) => {
     const {email} = req.body;
 
     try {
-        const user = await prisma.user.findUnique({where: {email}});
-
-        if (!user) {
-            return res.status(400).json({message: "Usuario no encontrado"});
-        }
-        if (user.isVerified) {
-            return res.status(400).json({message: "El usuario ya está confirmado"});
-        }
-
-        const token = generateToken({userId: user.id}, "1h");
-        const confirmUrl = buildConfirUrl(token);
-
-        await transporter.sendMail({
-            from: "TRABAJITO APP",
-            to: email,
-            subject: "Reenvío de confirmación tu correo",
-            html: `<p>Hola ${user.firstName}, </p>
-                   <p>Por favor confirma tu correo haciendo click en el siguiente enlace:</p>
-                   <a href="${confirmUrl}">Confirmar correo</a>`,
-        });
-
-        res.status(200).json({message: "Correo confirmado correctamente"});
-        console.log(confirmUrl);
-
-    } catch (error) {
-        res.status(500).json({
-            message: "Error al reenviar confirmación",
-            error: error.message
-        })
-    }
-}
-
-
-export const forgotPassword = async (req, res) => {
-    const {email} = req.body;
-
-    try {
-        const user = await prisma.user.findUnique({where: {email}});
-        if (!user) {
+        const usuario = await prisma.usuario.findUnique({where: {email}});
+        if (!usuario) {
             return res.status(400).json({message: "Usuario no encontrado"});
         }
 
-        const resetToken = generateToken({userId: user.id}, "15m");
-        const resetUrl = `http://localhost:5175/nuevaContraseña?token=${resetToken}`;
-        // const resetUrl = `RUTA AL FRONT`;
+        await envioCorreoResetPassword(
+            {
+                id: usuario.id,
+                email: usuario.email,
+                nombre: usuario.nombre,
+            },
+            "30m"
+        );
 
-        await transporter.sendMail({
-            from: "TRABAJITO APP",
-            to: email,
-            subject: "Recuperación de contraseña",
-            html: `<p>Hola ${user.firstName}, </p>}
-                   <p>Haz click en el siguiente enlace para reestablecer tu constraseña:</p>
-                   <a href="${resetUrl}">Reestablecer contraseña</p>,`
-        });
-        console.log(resetUrl);
 
-        res.status(200).json({message: "Correo de recuperación enviado"});
+        return res.status(200).json({message: "Correo de recuperación enviado"});
     } catch (error) {
-        res.status(500).json({
+        console.error("contraseñaOlvidada error:", error);
+        return res.status(500).json({
             message: "Error al solicitar recuperar contraseña",
-            error: error.message
-        })
+            error: error.message,
+        });
     }
-}
+};
 
-
-export const resetPassword = async (req, res) => {
-    const {token} = req.query;
-    const {newPassword, confirmPassword} = req.body;
+export const cambiarContrasenia = async (req, res) => {
+    const { token } = req.query;
+    const { newPassword, confirmPassword } = req.body;
 
     try {
         const decoded = verifyToken(token);
         const userId = decoded.userId;
 
         if (newPassword !== confirmPassword) {
-            return res.status(400).json({message: "Las contraseñas no coinciden"})
+            return res.status(400).json({ message: "Las contraseñas no coinciden" });
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-        await prisma.user.update({
-            where: {id: userId},
-            data: {password: hashedPassword},
+        await prisma.usuario.update({
+            where: { id: userId },
+            data: { password: hashedPassword },
         });
 
-        res.status(200).json({message: "Contraseña restablecida correctamente"});
+        return res.status(200).json({ message: "Contraseña restablecida correctamente" });
     } catch (error) {
-        res.status(400).json({message: "Token inválido o expirado", error: error.message});
-    }
-}
+        if (error.name === "TokenExpiredError") {
+            return res.status(401).json({
+                message: "Token expirado",
+                code: "TOKEN_EXPIRED",
+            });
+        }
 
+        return res.status(400).json({
+            message: "Token inválido o error al cambiar contraseña",
+            code: "TOKEN_INVALID",
+            error: error.message,
+        });
+    }
+};
 

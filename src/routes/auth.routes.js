@@ -1,12 +1,11 @@
 import { Router } from 'express';
-import { 
-  signup, 
-  login, 
-  confirmEmail, 
-  resendConfirmation, 
-  forgotPassword, 
-  resetPassword,
-  reenviarConfirmacion
+import {
+  registrarUsuario,
+  login,
+  confirmarCuenta,
+  contraseñaOlvidada,
+  cambiarContrasenia,
+  reenviarConfirmacion,
 } from "../controllers/auth.controller.js";
 import { validateSchema } from '../middlewares/validations/validateSchema.js';
 import { createUserSchema, loginSchema } from '../middlewares/validations/user.validation.js';
@@ -14,21 +13,18 @@ import { createUserSchema, loginSchema } from '../middlewares/validations/user.v
 
 export const authRouter = Router();
 
-
-// Registro 
-authRouter.post("/signup", validateSchema(createUserSchema) ,signup);
-// Confirmación de email
-authRouter.get("/confirm", confirmEmail);
 // Login
 authRouter.post("/login", validateSchema(loginSchema), login);
-
+// Registro 
+authRouter.post("/registrarUsuario", validateSchema(createUserSchema) ,registrarUsuario);
+// Recuperación de contraseña
+authRouter.post("/contrasenia-olvidada", contraseñaOlvidada);
 // Reenvío de confirmación
 authRouter.post("/reenviar-confirmacion", reenviarConfirmacion);
+// Confirmación de email
+authRouter.get("/confirmar-cuenta", confirmarCuenta);
+// Cambio de contraseña
+authRouter.post("/cambiar-contrasenia", cambiarContrasenia);
 
-authRouter.post("/resend-confirmation", resendConfirmation);
-
-// Recuperación de contraseña
-authRouter.post("/forgot-password", forgotPassword);
-authRouter.post("/reset-password", resetPassword);
 
 export default authRouter;
