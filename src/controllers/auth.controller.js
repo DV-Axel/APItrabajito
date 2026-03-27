@@ -1,11 +1,12 @@
-import { prisma } from "../data/prisma.js";
+import {prisma} from "../data/prisma.js";
 import bcrypt from "bcryptjs";
-import { generateToken, verifyToken } from "../utils/jwt.js";
-import { buildConfirUrl } from "../utils/url.js";
-import { transporter } from "../utils/mailer.js";
-import { getWelcomeEmailHtml } from "../utils/emailTemplates.js";
+import {generateToken, verifyToken} from "../utils/jwt.js";
+import {buildConfirUrl} from "../utils/url.js";
+import {transporter} from "../utils/mailer.js";
+import {getWelcomeEmailHtml} from "../utils/emailTemplates.js";
+import {envioCorreoToken} from "../data/envioCorreoToken.js";
 
-export const signup = async(req, res) => {
+export const signup = async (req, res) => {
     try {
         const {
             nombre,
@@ -20,7 +21,7 @@ export const signup = async(req, res) => {
             numeroDepartamento,
             codigoPostal,
             tipoDocumento,
-            } = req.body;
+        } = req.body;
 
 
         //TODO: ver si las validaciones se pueden hacer con algun paquete externo
@@ -31,29 +32,28 @@ export const signup = async(req, res) => {
         const age = today.getFullYear() - birth.getFullYear();
         const m = today.getMonth() - birth.getMonth();
         if (age < 18 || (age === 18 && m < 0) || (age === 18 && m === 0 && today.getDate() < birth.getDate())) {
-            return res.status(400).json({ message: "Debes ser mayor de 18 años para registrarte" });
+            return res.status(400).json({message: "Debes ser mayor de 18 años para registrarte"});
         }
 
         // Verificar si el usuario existe
-        const existingUser = await prisma.usuario.findUnique({ where: { email } });
-        if ( existingUser ) {
-            return res.status(400).json({ message: "El email ya está registrado" });
+        const existingUser = await prisma.usuario.findUnique({where: {email}});
+        if (existingUser) {
+            return res.status(400).json({message: "El email ya está registrado"});
         }
 
         // Validar que el correo no esté registrado como sponsor
         const existingSponsor = await prisma.sponsor.findUnique({
-            where: { alternativeEmail: email }
+            where: {alternativeEmail: email}
         });
 
         if (existingSponsor) {
-            return res.status(400).json({ message: "El correo ya está registrado como sponsor" });
+            return res.status(400).json({message: "El correo ya está registrado como sponsor"});
         }
 
         // Hashea la constraseña
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Crear el usuario con cuentaVerificada: false
-        const newUser = await prisma.usuario.create({
+        const usuarioCreado = await prisma.usuario.create({
             data: {
                 nombre,
                 apellido,
@@ -69,39 +69,35 @@ export const signup = async(req, res) => {
                 numeroDepartamento,
                 codigoPostal,
                 tipoDocumento,
-                fotoPerfilUsuario: '/images/profilePicture/avatar.jpeg'
-            }
+                fotoPerfilUsuario: "/images/profilePicture/avatar.jpeg",
+            },
         });
 
-        const token = generateToken({ userId: newUser.id }, "1d");
-        const confirmUrl = buildConfirUrl( token );
-        const correoRegistrado = newUser.email;
-
-        await transporter.sendMail({
-            from: "TRABAJITO APP",
-            to: email,
-            subject: "Confirma tu correo y accede a todas las soluciones",
-            html: getWelcomeEmailHtml(nombre, confirmUrl, correoRegistrado),
-        });
+        //Aqui hago el envio del correo de confirmacion.
+        const confirmUrl = await envioCorreoToken(
+            {
+                id: usuarioCreado.id,
+                email: usuarioCreado.email,
+                nombre: usuarioCreado.nombre,
+            },
+            "1d"
+        );
 
         console.log(confirmUrl);
 
-        res.status(200).json({ message: "Usuario creado. Revisa tu correo para confirmar tu cuenta" });
 
-        } catch (error) {
-            console.error("signup error:", error);
-            res.status(500).json({ message: "Error en el registro de usuario", error: error.message });
+        res.status(200).json({message: "Usuario creado. Revisa tu correo para confirmar tu cuenta"});
+
+    } catch (error) {
+        console.error("signup error:", error);
+        res.status(500).json({message: "Error en el registro de usuario", error: error.message});
     }
 }
 
 
+export const confirmEmail = async (req, res) => {
+    const {token} = req.query;
 
-
-
-
-export const confirmEmail = async(req, res) => {
-    const { token } = req.query;
-    
     try {
         // Verifica y decodifica el token
         const decoded = verifyToken(token);
@@ -109,62 +105,60 @@ export const confirmEmail = async(req, res) => {
         console.log("entre al decode");
 
         const userId = decoded.userId;
-       
-        const usuario = await prisma.usuario.findUnique({ where: { id: userId }});
-        
+
+        const usuario = await prisma.usuario.findUnique({where: {id: userId}});
+
         if (!usuario) {
-            return res.status(404).json({ message: "Usuario no encontrado"});
+            return res.status(404).json({message: "Usuario no encontrado"});
         }
 
         if (usuario.cuentaVerificada) {
-            return res.status(400).json({ message: "El usuario ya fue confirmado"});
+            return res.status(400).json({message: "El usuario ya fue confirmado"});
         }
 
         // Busca y actualiza el usuario
         const actualizarCuentaVerificada = await prisma.usuario.update({
-            where: { id: userId },
-            data: { cuentaVerificada: true},
+            where: {id: userId},
+            data: {cuentaVerificada: true},
         });
 
-        res.status(200).json({ message: "Correo confirmado correctamente", actualizarCuentaVerificada });
+        res.status(200).json({message: "Correo confirmado correctamente", actualizarCuentaVerificada});
     } catch (error) {
-        res.status(400).json({ message: "Token inválido o expirado", error: error.message });
+        res.status(400).json({message: "Token inválido o expirado", error: error.message});
     }
 }
 
 
-
-
 export const login = async (req, res) => {
-    const { email, password } = req.body;
+    const {email, password} = req.body;
 
     console.log("Intento de login con email: ", email);
     console.log("Intento de login con password: ", password);
 
     try {
-        const usuario = await prisma.usuario.findUnique({ where: { email } });
+        const usuario = await prisma.usuario.findUnique({where: {email}});
         if (!usuario) {
-            return res.status(400).json({ message: "Usuario no encontrado" });
+            return res.status(400).json({message: "Usuario no encontrado"});
         }
 
         if (!usuario.cuentaVerificada) {
             return res
                 .status(403)
-                .json({ message: "Debes confirmar tu correo antes de iniciar sesión" });
+                .json({message: "Debes confirmar tu correo antes de iniciar sesión"});
         }
 
         const isMatch = await bcrypt.compare(password, usuario.password);
         if (!isMatch) {
             return res
                 .status(400)
-                .json({ message: "Correo Electrónico o Password Incorrectos" });
+                .json({message: "Correo Electrónico o Password Incorrectos"});
         }
 
-        const token = generateToken({ userId: usuario.id }, "2h");
+        const token = generateToken({userId: usuario.id}, "2h");
 
         // Cambiar userId -> usuarioId, que es el campo real en el modelo Worker
         const worker = await prisma.worker.findUnique({
-            where: { usuarioId: usuario.id },
+            where: {usuarioId: usuario.id},
         });
         const isWorker = !!worker;
 
@@ -183,41 +177,39 @@ export const login = async (req, res) => {
         console.error("Login error: ", error);
         res
             .status(500)
-            .json({ message: "Error en el login", error: error.message });
+            .json({message: "Error en el login", error: error.message});
     }
 };
 
 
-
-
-export const resendConfirmation = async(req, res) => {
-    const { email } = req.body;
+export const resendConfirmation = async (req, res) => {
+    const {email} = req.body;
 
     try {
-        const user = await prisma.user.findUnique({ where: { email } });
-        
+        const user = await prisma.user.findUnique({where: {email}});
+
         if (!user) {
-            return res.status(400).json({ message: "Usuario no encontrado" });
+            return res.status(400).json({message: "Usuario no encontrado"});
         }
         if (user.isVerified) {
-            return res.status(400).json({ message: "El usuario ya está confirmado" });
+            return res.status(400).json({message: "El usuario ya está confirmado"});
         }
 
-        const token = generateToken({ userId: user.id}, "1h");
+        const token = generateToken({userId: user.id}, "1h");
         const confirmUrl = buildConfirUrl(token);
 
         await transporter.sendMail({
             from: "TRABAJITO APP",
             to: email,
             subject: "Reenvío de confirmación tu correo",
-            html: `<p>Hola ${ user.firstName }, </p>
+            html: `<p>Hola ${user.firstName}, </p>
                    <p>Por favor confirma tu correo haciendo click en el siguiente enlace:</p>
                    <a href="${confirmUrl}">Confirmar correo</a>`,
         });
 
-        res.status(200).json({ message: "Correo confirmado correctamente" });
+        res.status(200).json({message: "Correo confirmado correctamente"});
         console.log(confirmUrl);
-        
+
     } catch (error) {
         res.status(500).json({
             message: "Error al reenviar confirmación",
@@ -227,18 +219,16 @@ export const resendConfirmation = async(req, res) => {
 }
 
 
-
-
-export const forgotPassword = async(req, res) => {
-    const { email } = req.body;
+export const forgotPassword = async (req, res) => {
+    const {email} = req.body;
 
     try {
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await prisma.user.findUnique({where: {email}});
         if (!user) {
-            return res.status(400).json({ message: "Usuario no encontrado" });
+            return res.status(400).json({message: "Usuario no encontrado"});
         }
 
-        const resetToken = generateToken({ userId: user.id }, "15m");
+        const resetToken = generateToken({userId: user.id}, "15m");
         const resetUrl = `http://localhost:5175/nuevaContraseña?token=${resetToken}`;
         // const resetUrl = `RUTA AL FRONT`;
 
@@ -252,7 +242,7 @@ export const forgotPassword = async(req, res) => {
         });
         console.log(resetUrl);
 
-        res.status(200).json({ message: "Correo de recuperación enviado" });
+        res.status(200).json({message: "Correo de recuperación enviado"});
     } catch (error) {
         res.status(500).json({
             message: "Error al solicitar recuperar contraseña",
@@ -262,28 +252,27 @@ export const forgotPassword = async(req, res) => {
 }
 
 
-
-export const resetPassword = async(req, res) => {
-    const { token } = req.query;
-    const { newPassword, confirmPassword } = req.body;
+export const resetPassword = async (req, res) => {
+    const {token} = req.query;
+    const {newPassword, confirmPassword} = req.body;
 
     try {
         const decoded = verifyToken(token);
         const userId = decoded.userId;
 
         if (newPassword !== confirmPassword) {
-            return res.status(400).json({ message: "Las contraseñas no coinciden" })
+            return res.status(400).json({message: "Las contraseñas no coinciden"})
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         await prisma.user.update({
-            where: { id: userId },
-            data: { password: hashedPassword },
+            where: {id: userId},
+            data: {password: hashedPassword},
         });
 
-        res.status(200).json({ message: "Contraseña restablecida correctamente"});
+        res.status(200).json({message: "Contraseña restablecida correctamente"});
     } catch (error) {
-        res.status(400).json({ message: "Token inválido o expirado", error: error.message });
+        res.status(400).json({message: "Token inválido o expirado", error: error.message});
     }
 }
