@@ -74,7 +74,7 @@ export const signup = async (req, res) => {
         });
 
         //Aqui hago el envio del correo de confirmacion.
-        const confirmUrl = await envioCorreoToken(
+        const { token, confirmUrl } = await envioCorreoToken(
             {
                 id: usuarioCreado.id,
                 email: usuarioCreado.email,
@@ -83,16 +83,69 @@ export const signup = async (req, res) => {
             "1d"
         );
 
-        console.log(confirmUrl);
+        console.log({ token, confirmUrl });
 
 
-        res.status(200).json({message: "Usuario creado. Revisa tu correo para confirmar tu cuenta"});
-
+        res.status(200).json({
+            message: "Usuario creado. Revisa tu correo para confirmar tu cuenta",
+            token, // \<= lo consumirá el front
+        });
     } catch (error) {
         console.error("signup error:", error);
         res.status(500).json({message: "Error en el registro de usuario", error: error.message});
     }
 }
+
+
+export const reenviarConfirmacion = async (req, res) => {
+    const {token} = req.body;
+
+    try {
+        if (!token) {
+            return res.status(400).json({message: "Token requerido"});
+        }
+
+        // Decodificar el token de verificación anterior
+        const decoded = verifyToken(token);
+        const userId = decoded.userId;
+
+        const usuario = await prisma.usuario.findUnique({
+            where: {id: userId},
+        });
+
+        if (!usuario) {
+            return res.status(404).json({message: "Usuario no encontrado"});
+        }
+
+        if (usuario.cuentaVerificada) {
+            return res
+                .status(400)
+                .json({message: "El usuario ya fue confirmado"});
+        }
+
+        // Volver a enviar el correo de confirmación
+        const confirmUrl = await envioCorreoToken(
+            {
+                id: usuario.id,
+                email: usuario.email,
+                nombre: usuario.nombre,
+            },
+            "1d"
+        );
+
+        console.log(confirmUrl);
+
+        return res.status(200).json({
+            message: "Correo reenviado correctamente",
+        });
+    } catch (error) {
+        console.error("reenviarConfirmacion error:", error);
+        return res.status(400).json({
+            message: "Token inválido o expirado",
+            error: error.message,
+        });
+    }
+};
 
 
 export const confirmEmail = async (req, res) => {
@@ -276,3 +329,5 @@ export const resetPassword = async (req, res) => {
         res.status(400).json({message: "Token inválido o expirado", error: error.message});
     }
 }
+
+

@@ -5,7 +5,8 @@ import {
   confirmEmail, 
   resendConfirmation, 
   forgotPassword, 
-  resetPassword 
+  resetPassword,
+  reenviarConfirmacion
 } from "../controllers/auth.controller.js";
 import { validateSchema } from '../middlewares/validations/validateSchema.js';
 import { createUserSchema, loginSchema } from '../middlewares/validations/user.validation.js';
@@ -20,6 +21,9 @@ authRouter.post("/signup", validateSchema(createUserSchema) ,signup);
 authRouter.get("/confirm", confirmEmail);
 // Login
 authRouter.post("/login", validateSchema(loginSchema), login);
+
+// Reenvío de confirmación
+authRouter.post("/reenviar-confirmacion", reenviarConfirmacion);
 
 authRouter.post("/resend-confirmation", resendConfirmation);
 

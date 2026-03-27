@@ -14,5 +14,6 @@ export const envioCorreoToken = async ({ id, email, nombre }, duracionToken) => 
         html: getWelcomeEmailHtml(nombre, confirmUrl, email),
     });
 
-    return confirmUrl;
-};
+    // ahora devuelvo ambas cosas
+    return { token, confirmUrl };
+}
