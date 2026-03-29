@@ -80,20 +80,10 @@ export const registrarUsuario = async (req, res) => {
                 id: usuarioCreado.id,
                 email: usuarioCreado.email,
                 nombre: usuarioCreado.nombre,
+                motivo: "registro"
             },
             "1d"
         );
-
-        if (token) {
-            const tokenGuardado = await prisma.tokenVerificacionCorreo.create({
-                data: {
-                    token,
-                    usuarioId: usuarioCreado.id,
-                    fechaCreacion: new Date(),
-                    fechaExpiracion: new Date(Date.now() + 24 * 60 * 60 * 1000) //calculo para 1d de duracion del token
-                }
-            })
-        }
 
         console.log("Token generado para confirmación: ", token);
 
@@ -101,7 +91,10 @@ export const registrarUsuario = async (req, res) => {
         console.log({token, confirmUrl});
 
 
-        res.status(200).json({message: "Usuario creado. Revisa tu correo para confirmar tu cuenta"});
+        res.status(200).json({
+            message: "Usuario creado. Revisa tu correo para confirmar tu cuenta",
+            usuarioId: usuarioCreado.id,
+        })
     } catch (error) {
         console.error("signup error:", error);
         res.status(500).json({message: "Error en el registro de usuario", error: error.message});
@@ -109,20 +102,23 @@ export const registrarUsuario = async (req, res) => {
 }
 
 
+// javascript
 export const reenviarConfirmacion = async (req, res) => {
-    const {token} = req.body;
+    const {usuarioId} = req.body;
 
     try {
-        if (!token) {
-            return res.status(400).json({message: "Token requerido"});
+        if (!usuarioId) {
+            return res.status(400).json({message: "usuarioId requerido"});
         }
 
-        // Decodificar el token de verificación anterior
-        const decoded = verifyToken(token);
-        const userId = decoded.userId;
+        // Convertir a número
+        const usuarioIdNumber = Number(usuarioId);
+        if (Number.isNaN(usuarioIdNumber)) {
+            return res.status(400).json({message: "usuarioId debe ser un número"});
+        }
 
         const usuario = await prisma.usuario.findUnique({
-            where: {id: userId},
+            where: {id: usuarioIdNumber},
         });
 
         if (!usuario) {
@@ -135,17 +131,17 @@ export const reenviarConfirmacion = async (req, res) => {
                 .json({message: "El usuario ya fue confirmado anteriormente"});
         }
 
-        // Volver a enviar el correo de confirmación
-        const confirmUrl = await envioCorreoToken(
+        const {token, confirmUrl} = await envioCorreoToken(
             {
                 id: usuario.id,
                 email: usuario.email,
                 nombre: usuario.nombre,
+                motivo: "reenvio",
             },
             "1d"
         );
 
-        console.log(confirmUrl);
+        console.log({token, confirmUrl});
 
         return res.status(200).json({
             message: "Correo reenviado correctamente",
@@ -160,30 +156,58 @@ export const reenviarConfirmacion = async (req, res) => {
 };
 
 
+// javascript
 export const confirmarCuenta = async (req, res) => {
-    const {token} = req.query;
+    const { token } = req.query;
+    console.log("confirmar-cuenta query:", req.query);
+
+    if (!token) {
+        return res.status(400).json({
+            message: "Token no proporcionado",
+            code: "TOKEN_NOPROPORCIONADO",
+        });
+    }
 
     try {
-        // Verifica y decodifica el token
         const decoded = verifyToken(token);
-
-        console.log("entre al decode");
-
         const userId = decoded.userId;
 
-        const usuario = await prisma.usuario.findUnique({where: {id: userId}});
+        const usuario = await prisma.usuario.findUnique({
+            where: { id: userId },
+            include: { emailTokens: true },
+        });
 
         if (!usuario) {
-            return res.status(404).json({message: "Usuario no encontrado"});
+            return res
+                .status(404)
+                .json({ message: "Usuario no encontrado", code: "USUARIO_NOENCONTRADO" });
         }
 
         if (usuario.cuentaVerificada) {
-            return res.status(400).json({message: "El usuario ya fue confirmado"});
+            return res.status(400).json({
+                message: "El usuario ya fue confirmado",
+                code: "USUARIO_YACONFIRMADO",
+            });
+        }
+
+        const emailToken = usuario.emailTokens?.[0];
+        if (!emailToken) {
+            return res.status(400).json({
+                message: "No se encontró token de verificación",
+                code: "TOKEN_NOENCONTRADO_DB",
+            });
+        }
+
+        if (emailToken.fechaExpiracion < new Date()) {
+            return res.status(400).json({
+                message: "El token ha expirado",
+                code: "TOKEN_EXPIRADO",
+            });
         }
 
         const actualizarCuentaVerificada = await prisma.usuario.update({
-            where: {id: userId},
-            data: {cuentaVerificada: true},
+            where: { id: userId },
+            data: { cuentaVerificada: true },
         });
 
         return res.status(200).json({
@@ -191,20 +215,7 @@ export const confirmarCuenta = async (req, res) => {
             actualizarCuentaVerificada,
         });
     } catch (error) {
-        // Manejo específico para token expirado
-        if (error.name === "TokenExpiredError") {
-            return res.status(401).json({
-                message: "Token expirado",
-                code: "TOKEN_EXPIRED",
-            });
-        }
-
-        // Otros errores de token
-        return res.status(400).json({
-            message: "Token inválido o error al confirmar",
-            code: "TOKEN_INVALID",
-            error: error.message,
-        });
+        console.error("confirmarCuenta error:", error);
     }
 };
 
