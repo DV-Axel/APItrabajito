@@ -84,13 +84,24 @@ export const registrarUsuario = async (req, res) => {
             "1d"
         );
 
+        if (token) {
+            const tokenGuardado = await prisma.tokenVerificacionCorreo.create({
+                data: {
+                    token,
+                    usuarioId: usuarioCreado.id,
+                    fechaCreacion: new Date(),
+                    fechaExpiracion: new Date(Date.now() + 24 * 60 * 60 * 1000) //calculo para 1d de duracion del token
+                }
+            })
+        }
+
+        console.log("Token generado para confirmación: ", token);
+
+
         console.log({token, confirmUrl});
 
 
-        res.status(200).json({
-            message: "Usuario creado. Revisa tu correo para confirmar tu cuenta",
-            token, // \<= lo consumirá el front
-        });
+        res.status(200).json({message: "Usuario creado. Revisa tu correo para confirmar tu cuenta"});
     } catch (error) {
         console.error("signup error:", error);
         res.status(500).json({message: "Error en el registro de usuario", error: error.message});
@@ -281,25 +292,25 @@ export const contraseñaOlvidada = async (req, res) => {
 };
 
 export const cambiarContrasenia = async (req, res) => {
-    const { token } = req.query;
-    const { newPassword, confirmPassword } = req.body;
+    const {token} = req.query;
+    const {newPassword, confirmPassword} = req.body;
 
     try {
         const decoded = verifyToken(token);
         const userId = decoded.userId;
 
         if (newPassword !== confirmPassword) {
-            return res.status(400).json({ message: "Las contraseñas no coinciden" });
+            return res.status(400).json({message: "Las contraseñas no coinciden"});
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         await prisma.usuario.update({
-            where: { id: userId },
-            data: { password: hashedPassword },
+            where: {id: userId},
+            data: {password: hashedPassword},
         });
 
-        return res.status(200).json({ message: "Contraseña restablecida correctamente" });
+        return res.status(200).json({message: "Contraseña restablecida correctamente"});
     } catch (error) {
         if (error.name === "TokenExpiredError") {
             return res.status(401).json({

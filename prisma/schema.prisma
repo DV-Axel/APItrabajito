@@ -33,10 +33,23 @@ model Usuario {
   numeroDepartamento String?      @db.VarChar(10)
   fotoPerfilUsuario  String?
   worker             Worker?
-  // Relationships
+
+
+  // relaciones
   jobRequests        JobRequest[]
+  emailTokens tokenVerificacionCorreo[]
 
   @@map("usuarios")
+}
+
+model tokenVerificacionCorreo{
+  id Int @id @default(autoincrement())
+  token String @unique
+  usuarioId Int @unique
+  fechaCreacion DateTime @default(now())
+  fechaExpiracion DateTime
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
 }
 
 model Worker {
@@ -254,12 +267,6 @@ model Application {
   @@map("applications")
 }
 
-// model JobRequestStatus {
-//   id   Int    @id @default(autoincrement())
-//   name String @db.VarChar(45)
 
-//   // Relationships
-//   jobRequests JobRequest[]
 
-//   @@map("job_request_statuses")
-// }
+
