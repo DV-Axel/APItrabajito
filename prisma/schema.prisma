@@ -38,8 +38,25 @@ model Usuario {
   // relaciones
   jobRequests        JobRequest[]
   emailTokens tokenVerificacionCorreo[]
+  providers          authProvider[]
 
   @@map("usuarios")
+}
+
+model authProvider{
+  id Int @id @default(autoincrement())
+  provider String //google, github, facebook, etc
+  providerUserId String //sub de google
+  avatar String? //avatar del provider
+  fechaCreacion DateTime @default(now())
+  usuarioId Int
+
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+
+  @@unique([provider, providerUserId])
+  @@map("auth_providers")
 }
 
 model tokenVerificacionCorreo{

@@ -6,6 +6,8 @@ import {transporter} from "../utils/mailer.js";
 import {getCorreoDeBienvenida} from "../utils/emailTemplates.js";
 import {envioCorreoToken} from "../data/envioCorreoToken.js";
 import {envioCorreoResetPassword} from "../data/envioCorreoResetPassword.js";
+import {OAuth2Client} from "google-auth-library";
+
 
 export const registrarUsuario = async (req, res) => {
     try {
@@ -158,7 +160,7 @@ export const reenviarConfirmacion = async (req, res) => {
 
 // javascript
 export const confirmarCuenta = async (req, res) => {
-    const { token } = req.query;
+    const {token} = req.query;
     console.log("confirmar-cuenta query:", req.query);
 
     if (!token) {
@@ -173,14 +175,14 @@ export const confirmarCuenta = async (req, res) => {
         const userId = decoded.userId;
 
         const usuario = await prisma.usuario.findUnique({
-            where: { id: userId },
-            include: { emailTokens: true },
+            where: {id: userId},
+            include: {emailTokens: true},
         });
 
         if (!usuario) {
             return res
                 .status(404)
-                .json({ message: "Usuario no encontrado", code: "USUARIO_NOENCONTRADO" });
+                .json({message: "Usuario no encontrado", code: "USUARIO_NOENCONTRADO"});
         }
 
         if (usuario.cuentaVerificada) {
@@ -206,8 +208,8 @@ export const confirmarCuenta = async (req, res) => {
         }
 
         const actualizarCuentaVerificada = await prisma.usuario.update({
-            where: { id: userId },
-            data: { cuentaVerificada: true },
+            where: {id: userId},
+            data: {cuentaVerificada: true},
         });
 
         return res.status(200).json({
@@ -338,3 +340,86 @@ export const cambiarContrasenia = async (req, res) => {
     }
 };
 
+// javascript
+export const authGoogle = async (req, res) => {
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+    try {
+        const { credential } = req.body;
+
+        if (!credential) {
+            return res.status(400).json({ message: "No llegó credential" });
+        }
+
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        const { sub, picture, email } = payload;
+
+        // 1\) Busco provider por sub e incluyo usuario
+        let authProv = await prisma.authProvider.findFirst({
+            where: { providerUserId: sub },
+            include: { usuario: true },
+        });
+
+        // 2\) Si no lo encuentro o no tiene usuario asociado, busco usuario por email
+        if (!authProv || !authProv.usuario) {
+            const usuarioRegistro = await prisma.usuario.findUnique({
+                where: { email },
+            });
+
+            // 2.a) Si NO existe usuario -> devolver 200 con code USUARIO_NOREGISTRADO
+            if (!usuarioRegistro) {
+                return res.status(200).json({
+                    code: "USUARIO_NOREGISTRADO",
+                    message: "Usuario no registrado. Debe completar el formulario de registro.",
+                    googleData: {
+                        sub,
+                        email,
+                        picture,
+                    },
+                });
+            }
+
+            // 2.b) Si existe usuario -> creo el authProvider asociado y lo incluyo
+            authProv = await prisma.authProvider.create({
+                data: {
+                    provider: "google",
+                    providerUserId: sub,
+                    avatar: picture,
+                    usuarioId: usuarioRegistro.id,
+                },
+                include: { usuario: true },
+            });
+        }
+
+        const usuario = authProv.usuario;
+
+        // 3\) Verifico si es worker
+        const worker = await prisma.worker.findUnique({
+            where: { usuarioId: usuario.id },
+        });
+        const isWorker = !!worker;
+
+        // 4\) Genero token usando el id del usuario
+        const token = generateToken({ userId: usuario.id }, "2h");
+
+        return res.status(200).json({
+            message: "Login exitoso",
+            token,
+            usuario: {
+                id: usuario.id,
+                email: usuario.email,
+                nombre: usuario.nombre,
+                apellido: usuario.apellido,
+                isWorker,
+            },
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Error en auth/google" });
+    }
+};

@@ -6,6 +6,7 @@ import {
   contraseñaOlvidada,
   cambiarContrasenia,
   reenviarConfirmacion,
+  authGoogle
 } from "../controllers/auth.controller.js";
 import { validateSchema } from '../middlewares/validations/validateSchema.js';
 import { createUserSchema, loginSchema } from '../middlewares/validations/user.validation.js';
@@ -25,6 +26,9 @@ authRouter.post("/reenviar-confirmacion", reenviarConfirmacion);
 authRouter.get("/confirmar-cuenta", confirmarCuenta);
 // Cambio de contraseña
 authRouter.post("/cambiar-contrasenia", cambiarContrasenia);
+
+//provider google
+authRouter.post("/provider/google", authGoogle)
 
 
 export default authRouter;
