@@ -27,7 +27,6 @@ export const registrarUsuario = async (req, res) => {
         } = req.body;
 
 
-        //TODO: ver si las validaciones se pueden hacer con algun paquete externo
         //Etapa de validaciones
         // Validar que el usuario sea mayor de 18 años
         const birth = new Date(fechaNacimiento);
@@ -53,8 +52,14 @@ export const registrarUsuario = async (req, res) => {
             return res.status(400).json({message: "El correo ya está registrado como sponsor"});
         }
 
-        // Hashea la constraseña
         const hashedPassword = await bcrypt.hash(password, 10);
+
+        // default
+        let fotoPerfilPath = "/images/profilePicture/avatar.jpeg";
+        // si multer subió archivo
+        if (req.file) {
+            fotoPerfilPath = `/images/profilePicture/${req.file.filename}`;
+        }
 
         const usuarioCreado = await prisma.usuario.create({
             data: {
@@ -72,7 +77,7 @@ export const registrarUsuario = async (req, res) => {
                 numeroDepartamento,
                 codigoPostal,
                 tipoDocumento,
-                fotoPerfilUsuario: "/images/profilePicture/avatar.jpeg",
+                fotoPerfilUsuario: fotoPerfilPath,
             },
         });
 
@@ -87,21 +92,17 @@ export const registrarUsuario = async (req, res) => {
             "1d"
         );
 
-        console.log("Token generado para confirmación: ", token);
+        console.log("Token generado para confirmación: ", token, confirmUrl);
 
-
-        console.log({token, confirmUrl});
-
-
-        res.status(200).json({
+        return res.status(200).json({
             message: "Usuario creado. Revisa tu correo para confirmar tu cuenta",
             usuarioId: usuarioCreado.id,
-        })
+        });
     } catch (error) {
         console.error("signup error:", error);
-        res.status(500).json({message: "Error en el registro de usuario", error: error.message});
+        return res.status(500).json({message: "Error en el registro de usuario", error: error.message});
     }
-}
+};
 
 
 // javascript
@@ -263,6 +264,7 @@ export const login = async (req, res) => {
                 email: usuario.email,
                 nombre: usuario.nombre,
                 apellido: usuario.apellido,
+                fotoPerfilUsuario: usuario.fotoPerfilUsuario,
                 isWorker,
             },
         });
@@ -415,6 +417,7 @@ export const authGoogle = async (req, res) => {
                 email: usuario.email,
                 nombre: usuario.nombre,
                 apellido: usuario.apellido,
+                fotoPerfilUsuario: usuario.fotoPerfilUsuario,
                 isWorker,
             },
         });
