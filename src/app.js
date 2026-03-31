@@ -12,7 +12,11 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:5173', // origen del frontend
+    credentials: true,               // permitir cookies/autorización
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
