@@ -81,8 +81,7 @@ export const updateDataUser = async (req, res) => {
 
 
 
-export const getUserById = async(req, res) => {
-
+export const getPerfilByUsuarioId = async (req, res) => {
     const { id } = req.params;
 
     if (isNaN(id)) {
@@ -90,18 +89,19 @@ export const getUserById = async(req, res) => {
     }
 
     try {
-        const user = await prisma.user.findUnique({ where: { id: Number(id) } });
-               
-        if (!user) {
-            return res.status(500).json({ message:"Error al encontrar el usuario" })
-        };
+        const usuarioPerfil = await prisma.usuario.findUnique({ where: { id: Number(id) } });
 
-        res.status(200).json(user);
+        if (!usuarioPerfil) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
+        }
 
+        return res.status(200).json(usuarioPerfil);
     } catch (error) {
-        res.status(500).json({ message: "Error al consultar el servidor" })
+        console.error("Error en getPerfilByUsuarioId:", error);
+        return res.status(500).json({ message: "Error al consultar el servidor" });
     }
-}
+};
+
 
 
 
