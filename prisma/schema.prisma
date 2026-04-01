@@ -16,57 +16,89 @@ datasource db {
 }
 
 model Usuario {
-  id                 Int          @id @default(autoincrement())
-  nombre             String       @db.VarChar(45)
-  apellido           String       @db.VarChar(70)
-  numeroDocumento    String       @db.VarChar(15)
+  id                 Int      @id @default(autoincrement())
+  nombre             String   @db.VarChar(45)
+  apellido           String   @db.VarChar(70)
+  numeroDocumento    String   @db.VarChar(15)
   tipoDocumento      String
-  email              String       @unique @db.VarChar(80)
-  fechaNacimiento    DateTime     @db.Date
-  password           String       @db.VarChar(255)
+  email              String   @unique @db.VarChar(80)
+  fechaNacimiento    DateTime @db.Date
+  password           String   @db.VarChar(255)
   telefono           Int
-  fechaRegistro      DateTime     @default(now()) @db.Date
-  cuentaVerificada   Boolean      @default(false)
-  calle              String       @db.VarChar(60)
-  numeroCalle        String       @db.VarChar(10)
-  localidad           String       @db.VarChar(45)
-  partido             String       @db.VarChar(45)
-  provincia           String       @db.VarChar(45)
-  codigoPostal       String       @db.VarChar(10)
-  numeroDepartamento String?      @db.VarChar(10)
+  fechaRegistro      DateTime @default(now()) @db.Date
+  cuentaVerificada   Boolean  @default(false)
+  calle              String   @db.VarChar(60)
+  numeroCalle        String   @db.VarChar(10)
+  localidad          String   @db.VarChar(45)
+  partido            String   @db.VarChar(45)
+  provincia          String   @db.VarChar(45)
+  codigoPostal       String   @db.VarChar(10)
+  numeroDepartamento String?  @db.VarChar(10)
   fotoPerfilUsuario  String?
   worker             Worker?
 
-
   // relaciones
-  jobRequests        JobRequest[]
+  jobRequests JobRequest[]
   emailTokens tokenVerificacionCorreo[]
-  providers          authProvider[]
+  providers   authProvider[]
 
   @@map("usuarios")
 }
 
-model authProvider{
-  id Int @id @default(autoincrement())
-  provider String //google, github, facebook, etc
-  providerUserId String //sub de google
-  avatar String? //avatar del provider
-  fechaCreacion DateTime @default(now())
-  usuarioId Int
+enum TipoInput {
+  text
+  number
+  select
+  radio
+  checkbox
+  file
+  textarea
+  date
+}
 
+model PreguntaServicio {
+  id            Int       @id @default(autoincrement())
+  pregunta      String    @db.Text
+  servicioId    Int
+  tipoInput     TipoInput
+  esObligatoria Boolean   @default(false)
+  ayuda         String?   @db.Text
+
+  servicio Servicio @relation(fields: [servicioId], references: [id])
+
+  // relación inversa con OpcionPreguntaServicio
+  opciones OpcionPreguntaServicio[]
+
+  @@map("preguntas_servicio")
+}
+
+model OpcionPreguntaServicio {
+  id         Int    @id @default(autoincrement())
+  preguntaId Int
+  valor      String @db.VarChar(100)
+
+  pregunta PreguntaServicio @relation(fields: [preguntaId], references: [id])
+}
+
+model authProvider {
+  id             Int      @id @default(autoincrement())
+  provider       String //google, github, facebook, etc
+  providerUserId String //sub de google
+  avatar         String? //avatar del provider
+  fechaCreacion  DateTime @default(now())
+  usuarioId      Int
 
   usuario Usuario @relation(fields: [usuarioId], references: [id])
-
 
   @@unique([provider, providerUserId])
   @@map("auth_providers")
 }
 
-model tokenVerificacionCorreo{
-  id Int @id @default(autoincrement())
-  token String @unique
-  usuarioId Int @unique
-  fechaCreacion DateTime @default(now())
+model tokenVerificacionCorreo {
+  id              Int      @id @default(autoincrement())
+  token           String   @unique
+  usuarioId       Int      @unique
+  fechaCreacion   DateTime @default(now())
   fechaExpiracion DateTime
 
   usuario Usuario @relation(fields: [usuarioId], references: [id])
@@ -106,23 +138,27 @@ model WorkerCategory {
 
   // Relationships
   worker   Worker   @relation(fields: [workerId], references: [id])
-  category Category @relation(fields: [categoryId], references: [id])
+  servicio Servicio @relation(fields: [categoryId], references: [id])
 
   @@id([workerId, categoryId])
   @@map("worker_categories")
 }
 
-model Category {
-  id          Int    @id @default(autoincrement())
-  name        String @unique @db.VarChar(45)
-  description String @db.Text
+model Servicio {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique @db.VarChar(45)
+  icono  String @db.VarChar(255)
+  color  String @db.VarChar(30)
 
   // Relaciones
   workerCategories  WorkerCategory[]
   sponsorCategories SponsorCategory[]
   jobRequests       JobRequest[]      @relation("CategoryToJobRequest")
 
-  @@map("categories")
+  // relación inversa con PreguntaServicio
+  preguntas PreguntaServicio[]
+
+  @@map("servicios")
 }
 
 model SponsorCategory {
@@ -131,7 +167,7 @@ model SponsorCategory {
 
   // Relationships
   sponsor  Sponsor  @relation(fields: [sponsorId], references: [id])
-  category Category @relation(fields: [categoryId], references: [id])
+  servicio Servicio @relation(fields: [categoryId], references: [id])
 
   @@id([sponsorId, categoryId])
   @@map("sponsor_categories")
@@ -245,7 +281,7 @@ model JobRequest {
   status   Status @relation(fields: [statusId], references: [id])
   statusId Int
 
-  service    Category @relation("CategoryToJobRequest", fields: [serviceKey], references: [id])
+  service    Servicio @relation("CategoryToJobRequest", fields: [serviceKey], references: [id])
   serviceKey Int
 
   applicationSelected   Application? @relation("SelectedApplication", fields: [applicationSelectedId], references: [id])
@@ -286,7 +322,3 @@ model Application {
 
   @@map("applications")
 }
-
-
-
-

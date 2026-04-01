@@ -2,12 +2,60 @@ import { prisma } from "../data/prisma.js";
 import { parseIfString } from "../data/helpers.js";
 import { deleteUploadedFiles } from "../utils/fileUtils.js";
 
+//CONTROLADORES NUEVOS
+export const getServicios = async (req, res) => {
+    try {
+        const servicios = await prisma.servicio.findMany({})
+        res.status(200).json(servicios);
+    } catch (error) {
+        console.error("Error al obtener servicios:", error);
+        res.status(500).json({ error: "Imposible obtener servicios" });
+    }
+}
 
+export const getPreguntasSerivicio = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json({ error: "Falta el parámetro id" });
+        }
+
+        const preguntas = await prisma.preguntaServicio.findMany({
+            where: { servicioId: Number(id) },
+            include: { opciones: true },
+            orderBy: { id: "asc" },
+        });
+
+        const resultado = preguntas.map((p) => {
+            const options = p.opciones?.map((o) => o.valor) ?? [];
+
+            return {
+                id: p.id,
+                name: p.id,
+                label: p.pregunta,
+                type: p.tipoInput,
+                placeholder: p.ayuda ?? null,
+                required: p.esObligatoria, // <- aquí lo exponés al front
+                options: options.length > 0 ? options : null,
+            };
+        });
+
+        return res.status(200).json(resultado);
+    } catch (error) {
+        console.error("Error al obtener preguntas del servicio:", error);
+        return res.status(500).json({ error: "Imposible obtener preguntas del servicio" });
+    }
+};
+
+
+
+
+
+
+
+// CONTROLADORES VIEJOS
 // javascript
 export const createJobRequest = async (req, res) => {
-
-
-
 
     try {
         const {

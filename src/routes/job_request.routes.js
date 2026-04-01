@@ -15,7 +15,9 @@ import {
     setFinalBudget,
     setConfirmJobRequestFinalized,
     setRateService,
-    setChangeMethodPayment
+    setChangeMethodPayment,
+    getServicios,
+    getPreguntasSerivicio
 
 } from "../controllers/job_request.controller.js";
 import { uploadJobRequestPhotos } from '../middlewares/images/updateJobRequestPhotos.js';
@@ -24,7 +26,14 @@ import { idSchema, statusIdSchema } from '../middlewares/validations/user.valida
 
 export const jobRequestRouter = Router();
 
+//Rutas nuevas
+jobRequestRouter.get("/servicios", getServicios); // Obtener todos los servicios disponibles para crear una solicitud de servicio
+jobRequestRouter.get("/traer-preguntas/:id", getPreguntasSerivicio); // Obtener todos los servicios disponibles para crear una solicitud de servicio
 
+
+
+
+//rutas viejas
 jobRequestRouter.post('/', uploadJobRequestPhotos.array('photos'), createJobRequest);
 jobRequestRouter.get('/check-postulacion', checkPostulation);
 jobRequestRouter.get("/detalle/:id", getJobRequestById); // Detalle de una solicitud de servicio
