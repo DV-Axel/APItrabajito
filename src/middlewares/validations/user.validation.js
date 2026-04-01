@@ -90,6 +90,24 @@ export const userSchema = z.object({
         .max(10, "El número de departamento no puede superar los 10 caracteres")
         .optional(),
 
+    localidad: z.string({
+        required_error: "La localidad es obligatoria"
+    })
+        .min(1, "La localidad es obligatoria")
+        .max(45, "La localidad no puede superar los 45 caracteres"),
+
+    partido: z.string({
+        required_error: "El partido es obligatorio"
+    })
+        .min(1, "El partido es obligatorio")
+        .max(45, "El partido no puede superar los 45 caracteres"),
+
+    provincia: z.string({
+        required_error: "La provincia es obligatoria"
+    })
+        .min(1, "La provincia es obligatoria")
+        .max(45, "La provincia no puede superar los 45 caracteres"),
+
     profileImage: z.string().optional(),
 });
 
@@ -124,3 +142,4 @@ export const loginSchema = z.object({
     })
         .min(1, "La contraseña es obligatoria")
 });
+

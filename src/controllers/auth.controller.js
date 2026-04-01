@@ -24,6 +24,9 @@ export const registrarUsuario = async (req, res) => {
             numeroDepartamento,
             codigoPostal,
             tipoDocumento,
+            localidad,
+            partido,
+            provincia
         } = req.body;
 
 
@@ -77,9 +80,13 @@ export const registrarUsuario = async (req, res) => {
                 numeroDepartamento,
                 codigoPostal,
                 tipoDocumento,
+                localidad,
+                partido,
+                provincia,
                 fotoPerfilUsuario: fotoPerfilPath,
             },
         });
+
 
         //Aqui hago el envio del correo de confirmacion.
         const {token, confirmUrl} = await envioCorreoToken(

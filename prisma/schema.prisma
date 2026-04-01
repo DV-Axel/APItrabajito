@@ -29,6 +29,9 @@ model Usuario {
   cuentaVerificada   Boolean      @default(false)
   calle              String       @db.VarChar(60)
   numeroCalle        String       @db.VarChar(10)
+  localidad           String       @db.VarChar(45)
+  partido             String       @db.VarChar(45)
+  provincia           String       @db.VarChar(45)
   codigoPostal       String       @db.VarChar(10)
   numeroDepartamento String?      @db.VarChar(10)
   fotoPerfilUsuario  String?
