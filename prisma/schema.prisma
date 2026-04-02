@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  //output   = "../src/generated/prisma"
+  // output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -15,6 +15,7 @@ datasource db {
   // directUrl = env("DIRECT_URL")
 }
 
+// MODELOS NUEVOS
 model Usuario {
   id                 Int      @id @default(autoincrement())
   nombre             String   @db.VarChar(45)
@@ -35,12 +36,10 @@ model Usuario {
   codigoPostal       String   @db.VarChar(10)
   numeroDepartamento String?  @db.VarChar(10)
   fotoPerfilUsuario  String?
-  worker             Worker?
 
-  // relaciones
-  jobRequests JobRequest[]
-  emailTokens tokenVerificacionCorreo[]
-  providers   authProvider[]
+  emailTokens       tokenVerificacionCorreo[]
+  providers         authProvider[]
+  SolicitudServicio SolicitudServicio[]
 
   @@map("usuarios")
 }
@@ -78,13 +77,15 @@ model OpcionPreguntaServicio {
   valor      String @db.VarChar(100)
 
   pregunta PreguntaServicio @relation(fields: [preguntaId], references: [id])
+
+  @@map("opciones_pregunta_servicio")
 }
 
 model authProvider {
   id             Int      @id @default(autoincrement())
-  provider       String //google, github, facebook, etc
-  providerUserId String //sub de google
-  avatar         String? //avatar del provider
+  provider       String // google, github, facebook, etc
+  providerUserId String // sub de google
+  avatar         String? // avatar del provider
   fechaCreacion  DateTime @default(now())
   usuarioId      Int
 
@@ -102,46 +103,8 @@ model tokenVerificacionCorreo {
   fechaExpiracion DateTime
 
   usuario Usuario @relation(fields: [usuarioId], references: [id])
-}
 
-model Worker {
-  id             Int      @id @default(autoincrement())
-  subtitle       String   @db.VarChar(100)
-  description    String   @db.Text
-  workLocation   Json
-  workingDays    Json
-  workingHours   Json
-  rating         Decimal  @default(0) @db.Decimal(3, 2)
-  jobsCompleted  Int      @default(0)
-  profilePicture String   @db.VarChar(255)
-  createdAt      DateTime @default(now())
-  extraData      Json?
-
-  // Relaciones
-  usuario   Usuario @relation(fields: [usuarioId], references: [id])
-  usuarioId Int     @unique
-
-  workerCategories WorkerCategory[]
-  sponsorWorkers   SponsorWorker[]
-  applications     Application[]
-
-  @@map("workers")
-}
-
-model WorkerCategory {
-  workerId       Int
-  categoryId     Int
-  hasCertificate Boolean @default(false)
-  isActive       Boolean @default(false)
-
-  createdAt DateTime @default(now()) @db.Timestamp
-
-  // Relationships
-  worker   Worker   @relation(fields: [workerId], references: [id])
-  servicio Servicio @relation(fields: [categoryId], references: [id])
-
-  @@id([workerId, categoryId])
-  @@map("worker_categories")
+  @@map("tokens_verificacion_correo")
 }
 
 model Servicio {
@@ -150,175 +113,41 @@ model Servicio {
   icono  String @db.VarChar(255)
   color  String @db.VarChar(30)
 
-  // Relaciones
-  workerCategories  WorkerCategory[]
-  sponsorCategories SponsorCategory[]
-  jobRequests       JobRequest[]      @relation("CategoryToJobRequest")
-
   // relación inversa con PreguntaServicio
-  preguntas PreguntaServicio[]
+  preguntas         PreguntaServicio[]
+  SolicitudServicio SolicitudServicio[]
 
   @@map("servicios")
 }
 
-model SponsorCategory {
-  sponsorId  Int
-  categoryId Int
+model SolicitudServicio {
+  id                    Int      @id @default(autoincrement())
+  titulo                String   @db.VarChar(100)
+  descripcion           String   @db.Text
+  esUrgente             Boolean  @default(false)
+  preguntasEspeccificas Json?
+  fotos                 String[] @db.VarChar(255)
+  desgloseDireccion     Json
+  fechaCreacion         DateTime @default(now())
+  visible               Boolean  @default(true)
 
-  // Relationships
-  sponsor  Sponsor  @relation(fields: [sponsorId], references: [id])
-  servicio Servicio @relation(fields: [categoryId], references: [id])
+  usuarioId  Int
+  estadoId   Int @default(1)
+  servicioId Int
 
-  @@id([sponsorId, categoryId])
-  @@map("sponsor_categories")
+  //Relaciones
+  usuario  Usuario  @relation(fields: [usuarioId], references: [id])
+  estado   Estado   @relation(fields: [estadoId], references: [id])
+  servicio Servicio @relation(fields: [servicioId], references: [id])
+
+  @@map("solicitudes_servicio")
 }
 
-model SponsorWorker {
-  sponsorId Int
-  workerId  Int
-  linkDate  DateTime @default(now())
-  isActive  Boolean  @default(false)
+model Estado {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique @db.VarChar(45)
 
-  // Relationships
-  sponsor Sponsor @relation(fields: [sponsorId], references: [id])
-  worker  Worker  @relation(fields: [workerId], references: [id])
+  solicitudesServicio SolicitudServicio[]
 
-  @@id([sponsorId, workerId])
-  @@map("sponsor_workers")
-}
-
-model Sponsor {
-  id                   Int      @id @default(autoincrement())
-  tradeName            String   @db.VarChar(45)
-  address              String   @db.VarChar(45)
-  phone                Int
-  cuilId               BigInt   @unique
-  businessName         String   @db.VarChar(45)
-  registeredAt         DateTime @default(now())
-  email                String   @unique @db.VarChar(80)
-  alternativeEmail     String   @unique @db.VarChar(80)
-  contactName          String   @db.VarChar(70)
-  aditionalInformation String?  @db.Text
-  logo                 String?
-  companyRegistration  String
-  social               Json?
-  workingHours         Json?
-  workingDays          Json?
-
-  // Relationships
-  sponsorCategories SponsorCategory[]
-  sponsorWorkers    SponsorWorker[]
-  inventory         SponsorInventory[]
-
-  @@map("sponsors")
-}
-
-model SponsorInventory {
-  sponsorId    Int
-  productId    Int
-  stock        Int
-  sellingPrice Int
-  minSale      Int
-  maxSale      Int
-  saleUnit     String @db.VarChar(30)
-
-  // Relationships
-  sponsor Sponsor @relation(fields: [sponsorId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
-
-  @@id([sponsorId, productId])
-  @@map("sponsor_inventory")
-}
-
-model Product {
-  id         Int    @id @default(autoincrement())
-  name       String @db.VarChar(70)
-  brand      String @db.VarChar(45)
-  volume     Int
-  volumeUnit String @db.VarChar(30)
-
-  // Relationships
-  sponsorInventory SponsorInventory[]
-
-  @@map("products")
-}
-
-model PaymentMethod {
-  id   Int    @id @default(autoincrement())
-  name String @unique @db.VarChar(45)
-
-  jobRequests JobRequest[]
-
-  @@map("payment_methods")
-}
-
-model JobRequest {
-  id                   Int      @id @default(autoincrement())
-  title                String   @db.VarChar(70)
-  urgency              Boolean
-  jobCreationDate      DateTime @default(now())
-  date                 DateTime
-  description          String   @db.Text
-  address              Json
-  propertyType         String
-  floor                String?
-  aparmentNumber       String?
-  position             Json
-  extraData            Json?
-  photos               Json?
-  isVisible            Boolean  @default(true)
-  agreementWorker      Boolean  @default(false)
-  agreementUser        Boolean  @default(false)
-  finalBudget          Decimal? @default(0) @db.Decimal(10, 2)
-  workFinishedUser     Boolean  @default(false)
-  workFinishedWorker   Boolean  @default(false)
-  userRatingForWorker  Int?
-  userCommentForWorker String?  @db.Text
-
-  Usuario   Usuario @relation(fields: [usuarioId], references: [id])
-  usuarioId Int
-
-  status   Status @relation(fields: [statusId], references: [id])
-  statusId Int
-
-  service    Servicio @relation("CategoryToJobRequest", fields: [serviceKey], references: [id])
-  serviceKey Int
-
-  applicationSelected   Application? @relation("SelectedApplication", fields: [applicationSelectedId], references: [id])
-  applicationSelectedId Int?         @unique
-
-  applications Application[] @relation("JobRequestApplications")
-
-  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
-  paymentMethodId Int
-
-  @@map("job_requests")
-}
-
-model Status {
-  id   Int    @id @default(autoincrement())
-  name String @unique @db.VarChar(45)
-
-  jobRequests JobRequest[]
-
-  @@map("statuses")
-}
-
-model Application {
-  id          Int      @id @default(autoincrement())
-  submittedAt DateTime @default(now())
-  budget      Decimal  @db.Decimal(10, 2)
-
-  description  String  @db.Text
-  requireVisit Boolean
-
-  jobRequestId Int
-  workerId     Int
-
-  jobRequest JobRequest @relation("JobRequestApplications", fields: [jobRequestId], references: [id])
-  worker     Worker     @relation(fields: [workerId], references: [id])
-
-  selectedByJobRequest JobRequest? @relation("SelectedApplication")
-
-  @@map("applications")
+  @@map("estados")
 }

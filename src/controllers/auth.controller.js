@@ -47,13 +47,13 @@ export const registrarUsuario = async (req, res) => {
         }
 
         // Validar que el correo no esté registrado como sponsor
-        const existingSponsor = await prisma.sponsor.findUnique({
-            where: {alternativeEmail: email}
-        });
-
-        if (existingSponsor) {
-            return res.status(400).json({message: "El correo ya está registrado como sponsor"});
-        }
+        // const existingSponsor = await prisma.sponsor.findUnique({
+        //     where: {alternativeEmail: email}
+        // });
+        //
+        // if (existingSponsor) {
+        //     return res.status(400).json({message: "El correo ya está registrado como sponsor"});
+        // }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -407,11 +407,13 @@ export const authGoogle = async (req, res) => {
 
         const usuario = authProv.usuario;
 
-        // 3\) Verifico si es worker
-        const worker = await prisma.worker.findUnique({
-            where: { usuarioId: usuario.id },
-        });
-        const isWorker = !!worker;
+        // TODO: VER LO DEL WORKER LO PONGO EN FALSE
+        //
+        // // 3\) Verifico si es worker
+        // const worker = await prisma.worker.findUnique({
+        //     where: { usuarioId: usuario.id },
+        // });
+        // const isWorker = !!worker;
 
         // 4\) Genero token usando el id del usuario
         const token = generateToken({ userId: usuario.id }, "2h");
@@ -425,7 +427,7 @@ export const authGoogle = async (req, res) => {
                 nombre: usuario.nombre,
                 apellido: usuario.apellido,
                 fotoPerfilUsuario: usuario.fotoPerfilUsuario,
-                isWorker,
+                isWorker: false,
             },
         });
     } catch (err) {
