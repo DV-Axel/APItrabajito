@@ -81,13 +81,13 @@ export const setPublicarServicio = async (req, res) => {
                 ? JSON.parse(preguntasEspecificas)
                 : null;
         } catch {
-            return res.status(400).json({ error: "preguntasEspecificas no es un JSON válido" });
+            return res.status(400).json({error: "preguntasEspecificas no es un JSON válido"});
         }
 
         try {
             desgloseDireccion = JSON.parse(desgloseDireccion);
         } catch {
-            return res.status(400).json({ error: "desgloseDireccion no es un JSON válido" });
+            return res.status(400).json({error: "desgloseDireccion no es un JSON válido"});
         }
 
         // Armar array de fotos desde multer
@@ -105,8 +105,8 @@ export const setPublicarServicio = async (req, res) => {
                 preguntasEspeccificas: preguntasEspecificas,
                 fotos,
                 desgloseDireccion,
-                usuario: { connect: { id: usuarioIdNum } },
-                servicio: { connect: { id: servicioId } },
+                usuario: {connect: {id: usuarioIdNum}},
+                servicio: {connect: {id: servicioId}},
                 // estadoId usa el default (1) según el schema
             }
         });
@@ -114,12 +114,13 @@ export const setPublicarServicio = async (req, res) => {
         return res.status(201).json(solicitud);
     } catch (error) {
         console.error("Error al publicar servicio:", error);
-        return res.status(500).json({ error: "Imposible publicar servicio" });
+        return res.status(500).json({error: "Imposible publicar servicio"});
     }
 };
 
 export const getSolcitudesByUsuarioId = async (req, res) => {
-    try {        const {id} = req.params;
+    try {
+        const {id} = req.params;
 
         if (!id) {
             return res.status(400).json({error: "Falta el parámetro id"});
@@ -141,10 +142,32 @@ export const getSolcitudesByUsuarioId = async (req, res) => {
     }
 }
 
+export const getSolicitudBySolcitudId = async (req, res) => {
+    try {
+        const {id} = req.params;
 
+        if (!id) {
+            return res.status(400).json({error: "Falta el parámetro id"});
+        }
 
+        const solicitud = await prisma.solicitudServicio.findUnique({
+            where: {id: Number(id)},
+            include: {
+                servicio: true,
+                estado: true,
 
+            }
+        });
 
+        if (!solicitud) {
+            return res.status(404).json({error: "Solicitud no encontrada"});
+        }
+
+        return res.status(200).json(solicitud);
+    } catch (error) {
+        console.error("Error al obtener solicitud por id:", error);
+    }
+}
 
 
 
