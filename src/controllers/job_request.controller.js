@@ -118,6 +118,47 @@ export const setPublicarServicio = async (req, res) => {
     }
 };
 
+export const getSolcitudesByUsuarioId = async (req, res) => {
+    try {        const {id} = req.params;
+
+        if (!id) {
+            return res.status(400).json({error: "Falta el parámetro id"});
+        }
+
+        const solicitudes = await prisma.solicitudServicio.findMany({
+            where: {usuarioId: Number(id)},
+            include: {
+                servicio: true,
+                estado: true
+            },
+            orderBy: {fechaCreacion: "desc"}
+        });
+
+        return res.status(200).json(solicitudes);
+    } catch (error) {
+        console.error("Error al obtener solicitudes por usuarioId:", error);
+        return res.status(500).json({error: "Imposible obtener solicitudes por usuarioId"});
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // CONTROLADORES VIEJOS
 // javascript
 export const createJobRequest = async (req, res) => {

@@ -19,7 +19,8 @@ import {
     setChangeMethodPayment,
     getServicios,
     getPreguntasSerivicio,
-    setPublicarServicio
+    setPublicarServicio,
+    getSolcitudesByUsuarioId
 
 } from "../controllers/job_request.controller.js";
 import { uploadJobRequestPhotos } from '../middlewares/images/updateJobRequestPhotos.js';
@@ -32,7 +33,7 @@ export const jobRequestRouter = Router();
 jobRequestRouter.get("/servicios", getServicios); // Obtener todos los servicios disponibles para crear una solicitud de servicio
 jobRequestRouter.get("/traer-preguntas/:id", getPreguntasSerivicio); // Obtener todos los servicios disponibles para crear una solicitud de servicio
 jobRequestRouter.post("/publicar-servicio", cargarFotosServicios.array('fotos') ,setPublicarServicio); // Obtener todos los servicios disponibles para crear una solicitud de servicio
-
+jobRequestRouter.get("/solicitudes-usuario/:id", getSolcitudesByUsuarioId); // Obtener todas las solicitudes de servicio de un usuario por su id
 
 
 
