@@ -169,6 +169,39 @@ export const getSolicitudBySolcitudId = async (req, res) => {
     }
 }
 
+export const setCancelarSolicitud = async (req, res) => {
+    try {
+        const {id} = req.params;
+
+        if (!id) {
+            return res.status(400).json({error: "Falta el parámetro id"});
+        }
+
+        const solicitud = await prisma.solicitudServicio.findUnique({
+            where: {id: Number(id)}
+        });
+
+        if (!solicitud) {
+            return res.status(404).json({error: "Solicitud no encontrada"});
+        }
+
+        const updatedSolicitud = await prisma.solicitudServicio.update({
+            where: {id: Number(id)},
+            data: {
+                estadoId: 6 // id del estado "cancelada"
+            }
+        });
+
+        return res.status(200).json({
+            message: "Solicitud cancelada correctamente",
+            solicitud: updatedSolicitud
+        });
+    } catch (error) {
+        console.error("Error al cancelar solicitud:", error);
+        return res.status(500).json({error: "Imposible cancelar solicitud"});
+    }
+}
+
 
 
 
