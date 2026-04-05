@@ -202,17 +202,159 @@ export const setCancelarSolicitud = async (req, res) => {
     }
 }
 
+export const setActualizarSolicitud = async (req, res) => {
+    try {
+        console.log("BODY ACTUALIZAR:", req.body)
+        console.log("FILES ACTUALIZAR:", req.files)
 
+        const {id} = req.params
 
+        let {
+            servicio,
+            titulo,
+            descripcion,
+            esUrgente,
+            preguntasEspeccificas,
+            desgloseDireccion,
+            usuarioId,
+            servicioId,
+            fotosExistentes, // <- viene del front como string JSON
+        } = req.body
 
+        if (!id) {
+            return res
+                .status(400)
+                .json({error: "Falta el parámetro id en la URL"})
+        }
 
+        const solicitud = await prisma.solicitudServicio.findUnique({
+            where: {id: Number(id)},
+        })
 
+        if (!solicitud) {
+            return res.status(404).json({error: "Solicitud no encontrada"})
+        }
 
+        // Normalizar tipos
+        if (typeof esUrgente === "string") {
+            esUrgente = esUrgente === "true"
+        }
 
+        // Parsear JSON de preguntas
+        try {
+            if (typeof preguntasEspeccificas === "string") {
+                preguntasEspeccificas = JSON.parse(preguntasEspeccificas)
+            }
+        } catch (e) {
+            console.error("Error parseando preguntasEspeccificas:", e)
+            return res
+                .status(400)
+                .json({error: "preguntasEspeccificas no es un JSON válido"})
+        }
 
+        // Parsear JSON de desgloseDireccion
+        try {
+            if (desgloseDireccion && typeof desgloseDireccion === "string") {
+                desgloseDireccion = JSON.parse(desgloseDireccion)
+            }
+        } catch (e) {
+            console.error("Error parseando desgloseDireccion:", e)
+            return res
+                .status(400)
+                .json({error: "desgloseDireccion no es un JSON válido"})
+        }
 
+        // Parsear fotosExistentes (paths que se conservan)
+        let fotosExistentesArray = []
+        try {
+            if (typeof fotosExistentes === "string") {
+                fotosExistentesArray = JSON.parse(fotosExistentes)
+            } else if (Array.isArray(fotosExistentes)) {
+                fotosExistentesArray = fotosExistentes
+            }
+        } catch (e) {
+            console.error("Error parseando fotosExistentes:", e)
+            return res
+                .status(400)
+                .json({error: "fotosExistentes no es un JSON válido"})
+        }
 
+        // Asegurar que sea array de strings
+        if (!Array.isArray(fotosExistentesArray)) {
+            fotosExistentesArray = []
+        }
 
+        const nuevasFotos = (req.files || []).map(
+            (file) => `/uploads/servicios/${file.filename}`
+        )
+
+// Armar data base (sin fotos todavía)
+        const data = {
+            titulo,
+            descripcion,
+            esUrgente,
+            preguntasEspeccificas,
+            desgloseDireccion,
+        }
+
+        // \- Interpretar fotosExistentesArray correctamente:
+//   * `null` / `undefined` \=\> front no tocó nada de fotos \-\> mantener las viejas
+//   * `[]` (array vacío) \=\> front quiere dejar 0 fotos
+//   * `[...paths]` \=\> mantener solo esas y sumar nuevas
+        let todasLasFotos
+
+        if (fotosExistentes !== undefined) {
+            // el front SI mandó fotosExistentes (aunque sea "[]")
+            const fotosExistentesArrayRaw = (() => {
+                if (typeof fotosExistentes === "string") {
+                    try {
+                        const parsed = JSON.parse(fotosExistentes)
+                        return Array.isArray(parsed) ? parsed : []
+                    } catch {
+                        return []
+                    }
+                }
+                if (Array.isArray(fotosExistentes)) return fotosExistentes
+                return []
+            })()
+
+            todasLasFotos = [...fotosExistentesArrayRaw, ...nuevasFotos]
+        } else {
+            // el front NO mandó fotosExistentes \=\> no tocó nada de fotos
+            // mantenemos las que ya tenía la solicitud
+            todasLasFotos = [...(solicitud.fotos || []), ...nuevasFotos]
+        }
+
+// ahora SÍ, si el front mandó [] y no subió nuevas,
+// todasLasFotos será [] y se guardan 0 fotos
+        data.fotos = todasLasFotos
+
+// resto de la lógica de usuario / servicio...
+        if (usuarioId) {
+            data.usuario = {connect: {id: Number(usuarioId)}}
+        }
+
+        const servicioIdFinal = servicioId || servicio
+        if (servicioIdFinal) {
+            data.servicio = {connect: {id: Number(servicioIdFinal)}}
+        }
+
+        const updatedSolicitud = await prisma.solicitudServicio.update({
+            where: {id: Number(id)},
+            data,
+        })
+
+        return res.status(200).json({
+            message: "Solicitud actualizada correctamente",
+            solicitud: updatedSolicitud,
+        })
+    } catch (error) {
+        console.error("Error al actualizar solicitud:", error)
+        return res
+            .status(500)
+            .json({error: "Imposible actualizar solicitud"})
+    }
+}
 
 
 // CONTROLADORES VIEJOS

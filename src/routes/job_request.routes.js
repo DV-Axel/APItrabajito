@@ -23,7 +23,8 @@ import {
     setPublicarServicio,
     getSolcitudesByUsuarioId,
     getSolicitudBySolcitudId,
-    setCancelarSolicitud
+    setCancelarSolicitud,
+    setActualizarSolicitud
 } from '../controllers/job_request.controller.js';
 import { uploadJobRequestPhotos } from '../middlewares/images/updateJobRequestPhotos.js';
 import { validateSchema } from '../middlewares/validations/validateSchema.js';
@@ -38,7 +39,7 @@ jobRequestRouter.post('/publicar-servicio', cargarFotosServicios.array('fotos'),
 jobRequestRouter.get('/solicitudes-usuario/:id', getSolcitudesByUsuarioId);
 jobRequestRouter.get('/detalle/:id', getSolicitudBySolcitudId);
 jobRequestRouter.post('/cancelar-solicitud/:id', setCancelarSolicitud);
-
+jobRequestRouter.put("/actualizar-solicitud/:id",cargarFotosServicios.array("fotos"),setActualizarSolicitud);
 
 
 
