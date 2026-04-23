@@ -220,6 +220,7 @@ model Sponsor {
   emailEmpresa      String   @unique @db.VarChar(80)
   telefonoEmpresa   String   @db.VarChar(20)
   calle             String   @db.VarChar(60)
+  cuentaVerificada   Boolean  @default(false)
   numeroCalle       Int
   piso              String?  @db.VarChar(10)
   oficina           String?  @db.VarChar(10)

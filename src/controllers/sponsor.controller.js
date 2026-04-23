@@ -5,10 +5,6 @@ import bcrypt from "bcrypt";
 
 export const registrarSponsor = async (req, res) => {
     try {
-        // Debug para desarrollo
-        console.log("BODY:", req.body);
-        console.log("FILES:", req.files);
-
         const {
             razonSocial,
             nombreComercial,
@@ -142,10 +138,56 @@ export const registrarSponsor = async (req, res) => {
         console.log("Token de verificación enviado al sponsor:", token, confirmURL);
 
         return res.status(200).json({
-            message: "Sponsor registrado correctamente"
+            message: "Sponsor registrado correctamente",
+            sponsorId: sponsorCreado.id
         });
     } catch (error) {
         console.error("Error al registrar sponsor:", error);
         return res.status(500).json({message: "Error interno al registrar sponsor"});
     }
 };
+
+export const reenviarConfirmacion = async (req, res) => {
+    try {
+        const {sponsorId} = req.body;
+
+        if (!sponsorId) {
+            return res.status(400).json({
+                message: "Falta el sponsorId en el cuerpo de la solicitud"
+            });
+        }
+
+        const SponsorIdNumber = Number(sponsorId);
+        if (Number.isNaN(SponsorIdNumber) || SponsorIdNumber <= 0) {
+            return res.status(400).json({
+                message: "El sponsorId debe ser un número entero positivo"
+            });
+        }
+
+        const sponsor = await prisma.sponsor.findUnique({
+            where: {id: SponsorIdNumber},
+        });
+
+        if (!sponsor) {
+            return res.status(404).json({message: "Sponsor no encontrado"});
+        }
+
+        if (sponsor.cuentaVerificada) {
+            return res.status(400).json({message: "El sponsor ya ha confirmado su email"});
+        }
+
+        const {token, confirmURL} = await envioCorreoTokenSponsor({
+            id: sponsor.id,
+            email: sponsor.emailEmpresa,
+            nombre: sponsor.nombreComercial,
+            motivo: "reenvio"
+        }, "1d");
+
+
+        return res.status(200).json({message: "Correo reenviado correctamente"});
+    } catch (error) {
+        console.error("Error al reenviar confirmación:", error);
+        return res.status(500).json({message: "Error interno al reenviar confirmación"});
+    }
+}
+

@@ -1,21 +1,22 @@
-import { generateToken } from "../utils/jwt.js";
-import {buildConfirUrlSposnor} from "../utils/url.js";
-import { transporter } from "../utils/mailer.js";
-import {getCorreoDeBienvenida, getCorreoDeBienvenidaSponsor} from "../utils/emailTemplates.js";
+import {generateToken} from "../utils/jwt.js";
+import {buildConfigUrlSponsor} from "../utils/url.js";
+import {transporter} from "../utils/mailer.js";
+import {getCorreoDeBienvenidaSponsor} from "../utils/emailTemplates.js";
 import {guardarTokenRegistroSponsor} from "./funcionesBBDD/guardarTokenRegistroSponsor.js";
+import {reescribirTokenRegistroSponsor} from "./funcionesBBDD/reescribirTokenRegistroSponsor.js";
 import {prisma} from "./prisma.js";
 
 
-export const envioCorreoTokenSponsor = async ({id, email, nombre,motivo}, duracionToken) => {
+export const envioCorreoTokenSponsor = async ({id, email, nombre, motivo}, duracionToken) => {
     const token = generateToken({userId: id}, duracionToken);
-    const confirmURL = buildConfirUrlSposnor(token)
+    const confirmURL = buildConfigUrlSponsor(token)
 
-    if(token){
-        if(motivo === "registro"){
+    if (token) {
+        if (motivo === "registro") {
             guardarTokenRegistroSponsor(token, id);
+        } else if (motivo === "reenvio") {
+            reescribirTokenRegistroSponsor(token, id);
         }
-    }else if(motivo === "reenvio"){
-        reescribirTokenRegistro(token, id, "tokenVerificacionCorreoSponsor");
     }
 
     await transporter.sendMail({
