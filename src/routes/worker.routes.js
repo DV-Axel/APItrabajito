@@ -4,11 +4,23 @@ import {
     createWorker,
     getServicesByCategory,
     getWorkerById,
-    getJobRequestsAppliedByWorkerId
+    getJobRequestsAppliedByWorkerId,
+    registrarWorker
 } from '../controllers/worker.controller.js';
 
 export const workerRouter = Router();
 
+workerRouter.post("/registrar-worker", uploadWorkerPhoto, registrarWorker);
+
+
+
+
+
+
+
+
+
+//RUTAS VIEJAS
 workerRouter.post('/', uploadWorkerPhoto, createWorker);
 workerRouter.post('/solicitudes-rubro/:id', getServicesByCategory);
 workerRouter.get('/traer-worker/:id', getWorkerById);

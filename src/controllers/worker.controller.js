@@ -3,7 +3,49 @@ import { parseIfString } from "../data/helpers.js";
 import path from 'path';
 import fs from 'fs';
 
+export const registrarWorker = async (req, res) => {
+    try{
+        console.log(req.body)
+        return res.status(500).send({ message: "test" });
 
+    }catch (error){
+        console.log(error)
+        return res.status(500).send({ message: "Error interno del servidor" });
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// CONTROLADORES VIEJOS
 export const createWorker = async (req, res) => {
     try {
         console.log(req.body);

@@ -20,3 +20,12 @@ export function getCorreoResetPassword(resetUrl, email) {
 
     return html;
 }
+
+export function getCorreoDeBienvenidaSponsor(nombre, confirmUrl) {
+    const templatePath = path.resolve("templates", "CorreoDeBienvenidaSponsor.html");
+    let html = fs.readFileSync(templatePath, "utf8");
+    html = html.replace(/\$\{nombreEmpresa\}/g, nombre);
+    html = html.replace(/\$\{confirmUrl\}/g, confirmUrl);
+    html = html.replace(/\$\{new Date\(\)\.getFullYear\(\)\}/g, new Date().getFullYear());
+    return html;
+}

@@ -1,128 +1,151 @@
-import { prisma } from "../data/prisma.js";
+import {prisma} from "../data/prisma.js";
 import {parseIfString} from "../data/helpers.js";
-import path from 'path';
-import fs from 'fs';
-import { deleteUploadedFiles } from "../utils/fileUtils.js";
+import {envioCorreoTokenSponsor} from "../data/envioCorreoTokenSponsor.js";
+import bcrypt from "bcrypt";
 
-export const createSponsor = async (req, res) => {
-    
+export const registrarSponsor = async (req, res) => {
     try {
-        console.log("Petición recibida");
-        console.log("Body:", req.body);
-        console.log("Files:", req.files); 
+        // Debug para desarrollo
+        console.log("BODY:", req.body);
+        console.log("FILES:", req.files);
 
         const {
-            businessName, tradeName, cuilId, address, contactName, phone,
-            email, alternativeEmail, aditionalInformation, rubros,
-            workingDays, workingHours, social
+            razonSocial,
+            nombreComercial,
+            tipoDocumento,
+            numeroDocumento,
+            rubros, // puede venir string JSON o array
+            sitioWeb,
+            emailEmpresa,
+            telefonoEmpresa,
+            calleEmpresa,
+            numeroCalleEmpresa,
+            pisoEmpresa,
+            oficinaEmpresa,
+            codigoPostalEmpresa,
+            localidadEmpresa,
+            partidoEmpresa,
+            provinciaEmpresa,
+            representante, // puede venir string JSON
+            password,
         } = req.body;
 
-        // Parseo de campos JSON
-        const rubrosParsed = parseIfString(rubros);
-        const workingDaysParsed = parseIfString(workingDays);
-        const workingHoursParsed = parseIfString(workingHours);
-        const socialParsed = parseIfString(social);
-
-        // Rutas de archivos subidos
-        const logoPath = req.files?.logo?.[0]?.path?.replace(/\\/g, "/");
-        const companyRegPath = req.files?.companyRegistration?.[0]?.path?.replace(/\\/g, "/");
-
-        // Validar que el sponsor no esté registrado como usuario
-        const existingUser = await prisma.user.findFirst({
-            where: {
-                OR: [
-                    { email: email },
-                    { email: alternativeEmail }
-                ]
-            }
-        });
-        if (existingUser) {
-            return res.status(400).json({ message: "El correo ya está registrado como usuario" });
+        // Validaciones mínimas
+        if (!emailEmpresa || !password || !razonSocial || !nombreComercial) {
+            return res.status(400).json({
+                code: "FALTAN_CAMPOS_OBLIGATORIOS",
+                message: "Faltan campos obligatorios (emailEmpresa, password, razonSocial, nombreComercial).",
+            });
         }
 
-        // Guardar en la base de datos
-        const sponsor = await prisma.sponsor.create({
+        // Validar campos obligatorios del schema
+        if (!sitioWeb || !telefonoEmpresa || !calleEmpresa || !codigoPostalEmpresa || !localidadEmpresa || !partidoEmpresa || !provinciaEmpresa) {
+            return res.status(400).json({
+                code: "FALTAN_CAMPOS_OBLIGATORIOS",
+                message: "Faltan campos obligatorios del domicilio o contacto.",
+            });
+        }
+
+        // Validar sponsor existente
+        const existeSponsor = await prisma.sponsor.findUnique({
+            where: {emailEmpresa},
+        });
+
+        if (existeSponsor) {
+            return res.status(400).json({code: "EMAIL_DUPLICADO", message: "El email ya está registrado"});
+        }
+
+        // Hash password
+        const passwordHasheada = await bcrypt.hash(password, 10);
+
+        // Foto: default o la subida
+        let fotoPerfilPath = "/images/profilePictureSponsor/avatar-default-sponsor.png";
+        const logoEmpresaFile = req.files?.logoEmpresa?.[0];
+        if (logoEmpresaFile?.filename) {
+            fotoPerfilPath = `/images/profilePictureSponsor/${logoEmpresaFile.filename}`;
+        }
+
+        // numeroCalleEmpresa: obligatorio y debe ser número
+        const numeroCalleParsed = Number(numeroCalleEmpresa);
+        if (!numeroCalleEmpresa || Number.isNaN(numeroCalleParsed)) {
+            return res.status(400).json({code: "NUMERO_CALLE_INVALIDO", message: "numeroCalleEmpresa inválido"});
+        }
+
+        // representante: debe ser JSON válido y objeto
+        const representanteParsed = parseIfString(representante);
+        if (
+            representanteParsed === undefined ||
+            representanteParsed === null ||
+            typeof representanteParsed !== "object" ||
+            Array.isArray(representanteParsed)
+        ) {
+            return res.status(400).json({
+                code: "REPRESENTANTE_INVALIDO",
+                message: "representante es requerido y debe ser un JSON válido",
+            });
+        }
+
+        // rubros: array de IDs de Servicio
+        const rubrosParsed = parseIfString(rubros) ?? [];
+        const rubrosArray = Array.isArray(rubrosParsed) ? rubrosParsed : [rubrosParsed];
+        const servicioIds = rubrosArray
+            .map((x) => Number(x))
+            .filter((n) => Number.isInteger(n) && n > 0);
+
+        if (servicioIds.length === 0) {
+            return res.status(400).json({
+                code: "RUBROS_INVALIDOS",
+                message: "Debes seleccionar al menos un rubro/servicio",
+            });
+        }
+
+        const sponsorCreado = await prisma.sponsor.create({
             data: {
-                businessName,
-                tradeName,
-                cuilId: cuilId.toString(),
-                address,
-                contactName,
-                phone: Number(phone),
-                email,
-                alternativeEmail,
-                aditionalInformation,
-                logo: logoPath,
-                companyRegistration: companyRegPath,
-                social: socialParsed,
-                workingDays: workingDaysParsed,
-                workingHours: workingHoursParsed
-            }
+                razonSocial,
+                nombreComercial,
+                tipoDocumento,
+                numeroDocumento: String(numeroDocumento),
+                sitioWeb,
+                emailEmpresa,
+                telefonoEmpresa,
+                calle: calleEmpresa,
+                numeroCalle: numeroCalleParsed,
+                piso: pisoEmpresa || null,
+                oficina: oficinaEmpresa || null,
+                codigoPostal: codigoPostalEmpresa,
+                localidad: localidadEmpresa,
+                partido: partidoEmpresa,
+                provincia: provinciaEmpresa,
+                representante: representanteParsed,
+                password: passwordHasheada,
+                fotoPerfilSponsor: fotoPerfilPath,
+            },
         });
 
-        // 2. Insertar en SponsorCategory
-        if (Array.isArray(rubrosParsed) && rubrosParsed.length > 0){
-            const sponsorCategoriesData = rubrosParsed.map(categoryId => ({
-                sponsorId: sponsor.id,
-                categoryId: Number(categoryId)
-            }));
-
-            await prisma.sponsorCategory.createMany({
-                data: sponsorCategoriesData,
-                skipDuplicates: true     // Opcional, evita duplicados
-            });
-        }
-       
-        res.status(201).json({ message: "Sponsor creado correctamente" });
-    } catch (error) {
-        // Borrar archivos subidos si hay error
-        if (req.files) {
-            // Junta todos los archivos en un solo array
-            const allFIles = Object.values(req.files).flat();
-            deleteUploadedFiles(allFIles);
-        }
-        console.error("Error al crear Sponsor:", error);
-        res.status(500).json({ error: "Error al crear Sponsor" });
-    }
-}
-
-
-export const getSponsorFromFormWorker = async (req, res) => {
-    try {
-        const { cuit, nombre } = req.body;
-
-        let sponsor;
-        if (cuit) {
-            sponsor = await prisma.sponsor.findFirst({
-                where: { cuilId: BigInt(cuit) },
-                select: { id: true, tradeName: true, cuilId: true, address: true }
-
-            });
-
-        } else if (nombre) {
-            sponsor = await prisma.sponsor.findFirst({
-                where: { tradeName: nombre },
-                select: { id: true, tradeName: true, cuilId: true, address: true }
-
-            });
-        } else {
-            return res.status(400).json({ error: "Falta cuit o nombre" });
-        }
-
-        if (!sponsor) {
-            return res.status(404).json({ error: "Sponsor no encontrado" });
-        }
-
-        res.json({
-            id: sponsor.id,
-            nombre: sponsor.tradeName,
-            cuil: sponsor.cuilId.toString(),
-            direccion: sponsor.address
+// Ahora sí, crea los rubros en transacción (o simplemente con createMany)
+        await prisma.sponsorServicio.createMany({
+            data: servicioIds.map((servicioId) => ({
+                sponsorId: sponsorCreado.id,
+                servicioId,
+            })),
+            skipDuplicates: true,
         });
 
+// Enviar correo de verificación
+        const {token, confirmURL} = await envioCorreoTokenSponsor({
+            id: sponsorCreado.id,
+            email: sponsorCreado.emailEmpresa,
+            nombre: sponsorCreado.nombreComercial,
+            motivo: "registro"
+        }, "1d");
 
+        console.log("Token de verificación enviado al sponsor:", token, confirmURL);
+
+        return res.status(200).json({
+            message: "Sponsor registrado correctamente"
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Error interno del servidor" });
+        console.error("Error al registrar sponsor:", error);
+        return res.status(500).json({message: "Error interno al registrar sponsor"});
     }
 };

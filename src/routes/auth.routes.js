@@ -1,17 +1,17 @@
 // javascript
-import { Router } from 'express';
+import {Router} from 'express';
 import {
-  registrarUsuario,
-  login,
-  confirmarCuenta,
-  contraseñaOlvidada,
-  cambiarContrasenia,
-  reenviarConfirmacion,
-  authGoogle
+    registrarUsuario,
+    login,
+    confirmarCuenta,
+    contraseñaOlvidada,
+    cambiarContrasenia,
+    reenviarConfirmacion,
+    authGoogle
 } from "../controllers/auth.controller.js";
-import { validateSchema } from "../middlewares/validations/validateSchema.js";
-import { createUserSchema, loginSchema } from "../middlewares/validations/user.validation.js";
-import { uploadProfilePictureMiddle } from "../middlewares/images/updateProfilePictureMiddle.js";
+import {validateSchema} from "../middlewares/validations/validateSchema.js";
+import {createUserSchema, loginSchema} from "../middlewares/validations/user.validation.js";
+import {uploadProfilePictureMiddle} from "../middlewares/images/updateProfilePictureMiddle.js";
 
 export const authRouter = Router();
 

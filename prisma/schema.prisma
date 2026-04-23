@@ -41,6 +41,9 @@ model Usuario {
   providers         authProvider[]
   SolicitudServicio SolicitudServicio[]
 
+  // relación 1-1 opcional con Worker
+  worker Worker? @relation("UsuarioWorker")
+
   @@map("usuarios")
 }
 
@@ -107,15 +110,31 @@ model tokenVerificacionCorreo {
   @@map("tokens_verificacion_correo")
 }
 
+model tokenVerificacionCorreoSponsor{
+  id              Int      @id @default(autoincrement())
+  token           String   @unique
+  sponsorId       Int      @unique
+  fechaCreacion   DateTime @default(now())
+  fechaExpiracion DateTime
+
+  sponsor Sponsor @relation(fields: [sponsorId], references: [id])
+
+  @@map("tokens_verificacion_correo_sponsor")
+}
+
 model Servicio {
   id     Int    @id @default(autoincrement())
   nombre String @unique @db.VarChar(45)
   icono  String @db.VarChar(255)
   color  String @db.VarChar(30)
 
-  // relación inversa con PreguntaServicio
+  // Relaciones existentes tuyas
   preguntas         PreguntaServicio[]
   SolicitudServicio SolicitudServicio[]
+
+  // ✅ N–N con Worker por tabla puente
+  serviciosWorker  ServicioWorker[]
+  sponsorServicios SponsorServicio[]
 
   @@map("servicios")
 }
@@ -135,7 +154,7 @@ model SolicitudServicio {
   estadoId   Int @default(1)
   servicioId Int
 
-  //Relaciones
+  // Relaciones
   usuario  Usuario  @relation(fields: [usuarioId], references: [id])
   estado   Estado   @relation(fields: [estadoId], references: [id])
   servicio Servicio @relation(fields: [servicioId], references: [id])
@@ -150,4 +169,85 @@ model Estado {
   solicitudesServicio SolicitudServicio[]
 
   @@map("estados")
+}
+
+model Worker {
+  id                     Int      @id @default(autoincrement())
+  tituloProfesional      String   @db.VarChar(100)
+  descripcionProfesional String   @db.Text
+  fotoPerfilUsuario      String?
+  zonasTrabajo           Json?
+  diasTrabajo            Json?
+  turnosTrabajo          Json?
+  rating                 Float    @default(0)
+  trabajosCompletados    Int      @default(0)
+  fechaRegistroWorker    DateTime @default(now())
+  datosExtraWorker       Json?
+
+  // ✅ FK + unique: un usuario solo puede tener 1 worker
+  usuarioId Int     @unique
+  usuario   Usuario @relation("UsuarioWorker", fields: [usuarioId], references: [id])
+
+  // ✅ N–N con Servicio por tabla puente
+  serviciosWorker ServicioWorker[]
+
+  @@map("workers")
+}
+
+model ServicioWorker {
+  id                 Int      @id @default(autoincrement())
+  workerId           Int
+  servicioId         Int
+  tieneCertificacion Boolean  @default(false)
+  estaActivo         Boolean  @default(true)
+  fechaRegistro      DateTime @default(now())
+
+  worker   Worker   @relation(fields: [workerId], references: [id])
+  servicio Servicio @relation(fields: [servicioId], references: [id])
+
+  // ✅ evita duplicados (mismo worker + mismo servicio)
+  @@unique([workerId, servicioId])
+  @@map("servicios_worker")
+}
+
+model Sponsor {
+  id                Int      @id @default(autoincrement())
+  razonSocial       String   @db.VarChar(100)
+  nombreComercial   String   @db.VarChar(100)
+  tipoDocumento     String
+  numeroDocumento   String   @db.VarChar(15)
+  sitioWeb          String   @db.VarChar(255)
+  emailEmpresa      String   @unique @db.VarChar(80)
+  telefonoEmpresa   String   @db.VarChar(20)
+  calle             String   @db.VarChar(60)
+  numeroCalle       Int
+  piso              String?  @db.VarChar(10)
+  oficina           String?  @db.VarChar(10)
+  codigoPostal      String   @db.VarChar(10)
+  localidad         String   @db.VarChar(45)
+  partido           String   @db.VarChar(45)
+  provincia         String   @db.VarChar(45)
+  representante     Json
+  password          String   @db.VarChar(255)
+  fotoPerfilSponsor String?
+  fechaRegistro     DateTime @default(now()) @db.Date
+
+  sponsorServicios SponsorServicio[]
+  tokenVerificacionCorreoSponsor tokenVerificacionCorreoSponsor?
+
+  @@map("sponsors")
+}
+
+model SponsorServicio {
+  id          Int       @id @default(autoincrement())
+  sponsorId   Int
+  servicioId  Int
+  fechaInicio DateTime  @default(now())
+  fechaFin    DateTime?
+
+  sponsor  Sponsor  @relation(fields: [sponsorId], references: [id])
+  servicio Servicio @relation(fields: [servicioId], references: [id])
+
+  @@unique([sponsorId, servicioId])
+  @@map("sponsors_servicios")
 }

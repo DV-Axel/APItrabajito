@@ -18,7 +18,7 @@ if ( !fs.existsSync(companyRegFolder) ){
 
 const storage = multer.diskStorage({
     destination: ( req, file, cb ) => {
-        if (file.fieldname === "logo") {
+        if (file.fieldname === "logoEmpresa") {
             cb(null, logoFolder);
         } else if (file.fieldname === "companyRegistration") {
             cb(null, companyRegFolder);
@@ -33,7 +33,7 @@ const storage = multer.diskStorage({
 
 
 const fileFilter = (req, file, cb) => {
-    if (file.fieldname === "logo"){
+    if (file.fieldname === "logoEmpresa"){
         // Solo imágenes para Logo
         const allowedTypes = /jpg|jpeg|png|gif/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -66,6 +66,6 @@ export const uploadSponsorFiles = multer({
     limits: { fieldSize: 50 * 1024 * 1024 },
     fileFilter
 }).fields([
-    { name: 'logo', maxCount: 1 },
-    { name: 'companyRegistration', maxCount: 1 }
+    { name: 'companyRegistration', maxCount: 1 },
+    { name: 'logoEmpresa', maxCount: 1}
 ]);
