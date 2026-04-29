@@ -2,6 +2,7 @@ import {prisma} from "../data/prisma.js";
 import {parseIfString} from "../data/helpers.js";
 import {envioCorreoTokenSponsor} from "../data/envioCorreoTokenSponsor.js";
 import bcrypt from "bcrypt";
+import {verifyToken} from "../utils/jwt.js";
 
 export const registrarSponsor = async (req, res) => {
     try {
@@ -190,4 +191,68 @@ export const reenviarConfirmacion = async (req, res) => {
         return res.status(500).json({message: "Error interno al reenviar confirmación"});
     }
 }
+
+export const confirmarCuenta = async (req, res) => {
+    const {token} = req.query;
+    console.log("confirmar-cuenta query:", req.query);
+
+    if (!token) {
+        return res.status(400).json({
+            message: "Token no proporcionado",
+            code: "TOKEN_NOPROPORCIONADO",
+        });
+    }
+
+    try {
+        const decoded = verifyToken(token);
+        const sponsorId = decoded.sponsorId;
+
+        const sponsor = await prisma.sponsor.findUnique({
+            where: {id: sponsorId},
+            include: {tokenVerificacionCorreoSponsor: true},
+        });
+
+        if (!sponsor) {
+            return res
+                .status(404)
+                .json({message: "Sponsor no encontrado", code: "SPONSOR_NOENCONTRADO"});
+        }
+
+        if (sponsor.cuentaVerificada) {
+            return res.status(400).json({
+                message: "El sponsor ya fue confirmado",
+                code: "SPONSOR_YACONFIRMADO",
+            });
+        }
+
+        const emailToken = sponsor.tokenVerificacionCorreoSponsor;
+        if (!emailToken) {
+            return res.status(400).json({
+                message: "No se encontró token de verificación",
+                code: "TOKEN_NOENCONTRADO_DB",
+            });
+        }
+
+        if (emailToken.fechaExpiracion < new Date()) {
+            return res.status(400).json({
+                message: "El token ha expirado",
+                code: "TOKEN_EXPIRADO",
+            });
+        }
+
+        console.log('pase validaciones')
+
+        const actualizarCuentaVerificada = await prisma.sponsor.update({
+            where: {id: sponsorId},
+            data: {cuentaVerificada: true},
+        });
+
+        return res.status(200).json({
+            message: "Correo confirmado correctamente",
+            actualizarCuentaVerificada,
+        });
+    } catch (error) {
+        console.error("confirmarCuenta error:", error);
+    }
+};
 

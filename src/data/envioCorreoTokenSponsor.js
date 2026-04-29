@@ -8,7 +8,7 @@ import {prisma} from "./prisma.js";
 
 
 export const envioCorreoTokenSponsor = async ({id, email, nombre, motivo}, duracionToken) => {
-    const token = generateToken({userId: id}, duracionToken);
+    const token = generateToken({sponsorId: id}, duracionToken);
     const confirmURL = buildConfigUrlSponsor(token)
 
     if (token) {
