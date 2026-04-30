@@ -14,3 +14,8 @@ export function buildResetPasswordUrl(token){
     const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
     return `${ baseUrl }/cambiar-contrasenia?token=${ token }`;
 }
+
+export function buildResetPasswordUrlSponsor(token){
+    const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    return `${ baseUrl }/sponsor/cambiar-contrasenia?token=${ token }`;
+}

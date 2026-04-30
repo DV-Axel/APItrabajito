@@ -3,6 +3,7 @@ import {parseIfString} from "../data/helpers.js";
 import {envioCorreoTokenSponsor} from "../data/envioCorreoTokenSponsor.js";
 import bcrypt from "bcrypt";
 import {verifyToken} from "../utils/jwt.js";
+import {envioCorreoResetPasswordSponsor} from "../data/envioCorreoResetPasswordSponsor.js";
 
 export const registrarSponsor = async (req, res) => {
     try {
@@ -256,3 +257,33 @@ export const confirmarCuenta = async (req, res) => {
     }
 };
 
+
+export const contraseñaOlvidada = async (req, res) => {
+    const {email} = req.body;
+
+    try {
+        const sponsor = await prisma.sponsor.findUnique({where: {emailEmpresa: email}});
+        if (!sponsor) {
+            return res.status(400).json({message: "Sponsor no encontrado"});
+        }
+
+        await envioCorreoResetPasswordSponsor(
+            {
+                id: sponsor.id,
+                email: sponsor.emailEmpresa,
+                nombre: sponsor.nombre,
+            },
+            "30m"
+        );
+
+
+        return res.status(200).json({message: "Correo de recuperación enviado"});
+    } catch (error) {
+        console.error("contraseñaOlvidada error:", error);
+        return res.status(500).json({
+            message: "Error al solicitar recuperar contraseña",
+            error: error.message,
+        });
+    }
+
+}
