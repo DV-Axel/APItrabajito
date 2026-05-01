@@ -287,3 +287,39 @@ export const contraseñaOlvidada = async (req, res) => {
     }
 
 }
+
+export const cambiarContrasenia = async (req, res) => {
+    const {token} = req.query;
+    const {newPassword, confirmPassword} = req.body;
+
+    try {
+        const decoded = verifyToken(token);
+        const sponsorId = decoded.sponsorId;
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({message: "Las contraseñas no coinciden"});
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await prisma.sponsor.update({
+            where: {id: sponsorId},
+            data: {password: hashedPassword},
+        });
+
+        return res.status(200).json({message: "Contraseña restablecida correctamente"});
+    } catch (error) {
+        if (error.name === "TokenExpiredError") {
+            return res.status(401).json({
+                message: "Token expirado",
+                code: "TOKEN_EXPIRED",
+            });
+        }
+
+        return res.status(400).json({
+            message: "Token inválido o error al cambiar contraseña",
+            code: "TOKEN_INVALID",
+            error: error.message,
+        });
+    }
+};
