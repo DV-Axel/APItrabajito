@@ -1,15 +1,15 @@
-// src/app.js
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import { userRouter } from './routes/user.routes.js';
-import { authRouter } from './routes/auth.routes.js';
-import { jobRequestRouter } from './routes/job_request.routes.js';
-import { workerRouter } from './routes/worker.routes.js';
-import { sponsorRouter } from './routes/sponsor.routes.js';
-import { categoryRouter } from './routes/category.routes.js';
+import {fileURLToPath} from 'url';
+import {userRouter} from './routes/user.routes.js';
+import {authRouter} from './routes/auth.routes.js';
+import {jobRequestRouter} from './routes/job_request.routes.js';
+import {workerRouter} from './routes/worker.routes.js';
+import {sponsorRouter} from './routes/sponsor.routes.js';
+import {categoryRouter} from './routes/category.routes.js';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
@@ -23,12 +23,13 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.join(__dirname, '..');
 
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL,
     credentials: true,
 }));
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser())
+app.use(express.urlencoded({extended: true}));
 
 // Archivos estáticos de public (si tu carpeta public está en la raíz, usa projectRoot)
 app.use('/images/profilePicture', express.static(path.join(projectRoot, 'public/images/profilePicture')));

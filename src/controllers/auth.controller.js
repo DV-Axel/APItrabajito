@@ -233,9 +233,6 @@ export const confirmarCuenta = async (req, res) => {
 export const login = async (req, res) => {
     const {email, password} = req.body;
 
-    console.log("Intento de login con email: ", email);
-    console.log("Intento de login con password: ", password);
-
     try {
         const usuario = await prisma.usuario.findUnique({where: {email}});
         if (!usuario) {
@@ -277,9 +274,7 @@ export const login = async (req, res) => {
         });
     } catch (error) {
         console.error("Login error: ", error);
-        res
-            .status(500)
-            .json({message: "Error en el login", error: error.message});
+        res.status(500).json({message: "Error en el login", error: error.message});
     }
 };
 
@@ -354,10 +349,10 @@ export const authGoogle = async (req, res) => {
     const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
     try {
-        const { credential } = req.body;
+        const {credential} = req.body;
 
         if (!credential) {
-            return res.status(400).json({ message: "No llegó credential" });
+            return res.status(400).json({message: "No llegó credential"});
         }
 
         const ticket = await client.verifyIdToken({
@@ -366,18 +361,18 @@ export const authGoogle = async (req, res) => {
         });
 
         const payload = ticket.getPayload();
-        const { sub, picture, email } = payload;
+        const {sub, picture, email} = payload;
 
         // 1\) Busco provider por sub e incluyo usuario
         let authProv = await prisma.authProvider.findFirst({
-            where: { providerUserId: sub },
-            include: { usuario: true },
+            where: {providerUserId: sub},
+            include: {usuario: true},
         });
 
         // 2\) Si no lo encuentro o no tiene usuario asociado, busco usuario por email
         if (!authProv || !authProv.usuario) {
             const usuarioRegistro = await prisma.usuario.findUnique({
-                where: { email },
+                where: {email},
             });
 
             // 2.a) Si NO existe usuario -> devolver 200 con code USUARIO_NOREGISTRADO
@@ -401,7 +396,7 @@ export const authGoogle = async (req, res) => {
                     avatar: picture,
                     usuarioId: usuarioRegistro.id,
                 },
-                include: { usuario: true },
+                include: {usuario: true},
             });
         }
 
@@ -416,7 +411,7 @@ export const authGoogle = async (req, res) => {
         // const isWorker = !!worker;
 
         // 4\) Genero token usando el id del usuario
-        const token = generateToken({ userId: usuario.id }, "2h");
+        const token = generateToken({userId: usuario.id}, "2h");
 
         return res.status(200).json({
             message: "Login exitoso",
@@ -432,6 +427,6 @@ export const authGoogle = async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ message: "Error en auth/google" });
+        return res.status(500).json({message: "Error en auth/google"});
     }
 };

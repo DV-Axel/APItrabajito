@@ -2,7 +2,7 @@ import {prisma} from "../data/prisma.js";
 import {parseIfString} from "../data/helpers.js";
 import {envioCorreoTokenSponsor} from "../data/envioCorreoTokenSponsor.js";
 import bcrypt from "bcrypt";
-import {verifyToken} from "../utils/jwt.js";
+import {verifyToken, generateToken} from "../utils/jwt.js";
 import {envioCorreoResetPasswordSponsor} from "../data/envioCorreoResetPasswordSponsor.js";
 
 export const registrarSponsor = async (req, res) => {
@@ -323,3 +323,70 @@ export const cambiarContrasenia = async (req, res) => {
         });
     }
 };
+
+export const loginSponsor = async (req, res) => {
+    const {email, password} = req.body;
+
+    try {
+        const sponsor = await prisma.sponsor.findUnique({where: {emailEmpresa: email}});
+        if (!sponsor) {
+            return res.status(400).json({message: "Sponsor no encontrado"});
+        }
+
+        if (!sponsor.cuentaVerificada) {
+            return res.status(400).json({message: "El email del sponsor no ha sido verificado"});
+        }
+
+        const isMatch = await bcrypt.compare(password, sponsor.password);
+        if (!isMatch) {
+            return res.status(400).json({message: "Contraseña incorrecta"});
+        }
+
+        const token = generateToken({sponsorId: sponsor.id}, "2h");
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: false, //TODO: Pasar esto a true en producción con HTTPS
+            sameSite: "Lax",
+            maxAge: 1000 * 60 * 60 * 24
+        })
+
+
+        return res.status(200).json({message: "Login exitoso",});
+    } catch (error) {
+        console.error("loginSponsor error:", error);
+        return res.status(500).json({message: "Error interno al iniciar sesión"});
+    }
+}
+
+export const extraerDatosSponsor = async (req, res) => {
+    const token = req.cookies.token;
+
+
+    if(!token) return res.status(401).json({message: "No esta autenticado."})
+
+    try{
+        const decoded = verifyToken(token);
+
+        const sponsor = await prisma.sponsor.findUnique({
+            where: {id: decoded.sponsorId}, // <-- usa sponsorId
+            select:{
+                id: true,
+                emailEmpresa: true,
+                nombreComercial: true,
+                fotoPerfilSponsor: true
+            }
+        })
+
+        if (!sponsor) {
+            return res.status(404).json({message: "Sponsor no encontrado"});
+        }
+
+
+
+        res.json({ user: sponsor });
+    }catch (error){
+        console.error("extraerDatosSponsor error:", error);
+        return res.status(401).json({message: "Token inválido o error al extraer datos"});
+    }
+}
