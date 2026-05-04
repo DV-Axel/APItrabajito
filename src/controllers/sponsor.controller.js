@@ -363,14 +363,14 @@ export const extraerDatosSponsor = async (req, res) => {
     const token = req.cookies.token;
 
 
-    if(!token) return res.status(401).json({message: "No esta autenticado."})
+    if (!token) return res.status(401).json({message: "No esta autenticado."})
 
-    try{
+    try {
         const decoded = verifyToken(token);
 
         const sponsor = await prisma.sponsor.findUnique({
             where: {id: decoded.sponsorId}, // <-- usa sponsorId
-            select:{
+            select: {
                 id: true,
                 emailEmpresa: true,
                 nombreComercial: true,
@@ -382,11 +382,94 @@ export const extraerDatosSponsor = async (req, res) => {
             return res.status(404).json({message: "Sponsor no encontrado"});
         }
 
-
-
-        res.json({ user: sponsor });
-    }catch (error){
+        res.json({user: sponsor});
+    } catch (error) {
         console.error("extraerDatosSponsor error:", error);
         return res.status(401).json({message: "Token inválido o error al extraer datos"});
     }
 }
+
+export const perfilSponsor = async (req, res) => {
+    try {
+        const sponsorId = Number(req.params.id); // <-- aquí obtienes el id
+
+        if (isNaN(sponsorId)) {
+            return res.status(400).json({message: "ID inválido"});
+        }
+
+        const sponsor = await prisma.sponsor.findUnique({
+            where: {id: sponsorId},
+            include: {
+                sponsorServicios: {
+                    include: {servicio: true}
+                }
+            }
+        });
+
+        if (!sponsor) {
+            return res.status(404).json({message: "Sponsor no encontrado"});
+        }
+
+        return res.status(200).json(sponsor);
+    } catch (error) {
+        console.error("perfilSponsor error:", error);
+        return res.status(500).json({message: "Error interno"});
+    }
+};
+
+
+export const actualizarPerfilSponsor = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const {
+            nombreComercial,
+            numeroCalle,
+            sitioWeb,
+            emailEmpresa,
+            telefonoEmpresa,
+            calle,
+            piso,
+            oficina,
+            localidad,
+            codigoPostal,
+            representante
+        } = req.body;
+
+        if (!nombreComercial || !numeroCalle || !emailEmpresa || !telefonoEmpresa || !calle || !localidad || !codigoPostal || !representante) {
+            return res.status(400).json({ message: "Faltan datos obligatorios" });
+        }
+
+        // Validar que el sponsor exista
+        const sponsor = await prisma.sponsor.findUnique({ where: { id: Number(id) } });
+        if (!sponsor) {
+            return res.status(404).json({ message: "Sponsor no encontrado" });
+        }
+
+        // Actualizar datos
+        const sponsorActualizado = await prisma.sponsor.update({
+            where: { id: Number(id) },
+            data: {
+                nombreComercial,
+                numeroCalle: Number(numeroCalle),
+                sitioWeb,
+                emailEmpresa,
+                telefonoEmpresa,
+                calle,
+                piso: piso || null,
+                oficina: oficina || null,
+                localidad,
+                codigoPostal,
+                representante // se guarda como JSON
+            }
+        });
+
+        return res.status(200).json({
+            message: "Perfil actualizado correctamente",
+            sponsor: sponsorActualizado
+        });
+    } catch (error) {
+        console.error("actualizarPerfilSponsor error:", error);
+        return res.status(500).json({ message: "Error interno" });
+    }
+};
