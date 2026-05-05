@@ -329,6 +329,7 @@ export const loginSponsor = async (req, res) => {
 
     try {
         const sponsor = await prisma.sponsor.findUnique({where: {emailEmpresa: email}});
+
         if (!sponsor) {
             return res.status(400).json({message: "Sponsor no encontrado"});
         }
@@ -424,6 +425,8 @@ export const actualizarPerfilSponsor = async (req, res) => {
 
         const {
             nombreComercial,
+            provincia,
+            partido,
             numeroCalle,
             sitioWeb,
             emailEmpresa,
@@ -436,7 +439,9 @@ export const actualizarPerfilSponsor = async (req, res) => {
             representante
         } = req.body;
 
-        if (!nombreComercial || !numeroCalle || !emailEmpresa || !telefonoEmpresa || !calle || !localidad || !codigoPostal || !representante) {
+        console.log(req.body)
+
+        if (!nombreComercial ||!provincia ||!partido || !numeroCalle || !emailEmpresa || !telefonoEmpresa || !calle  || !codigoPostal || !representante) {
             return res.status(400).json({ message: "Faltan datos obligatorios" });
         }
 
@@ -453,10 +458,12 @@ export const actualizarPerfilSponsor = async (req, res) => {
                 nombreComercial,
                 numeroCalle: Number(numeroCalle),
                 sitioWeb,
+                partido,
                 emailEmpresa,
                 telefonoEmpresa,
                 calle,
                 piso: piso || null,
+                provincia,
                 oficina: oficina || null,
                 localidad,
                 codigoPostal,
