@@ -7,6 +7,7 @@ import {
     contraseñaOlvidada,
     cambiarContrasenia,
     reenviarConfirmacion,
+    extraerDatosUsuario,
     authGoogle
 } from "../controllers/auth.controller.js";
 import {validateSchema} from "../middlewares/validations/validateSchema.js";
@@ -26,16 +27,15 @@ authRouter.post(
     registrarUsuario
 );
 
-// Recuperación de contraseña
-authRouter.post("/contrasenia-olvidada", contraseñaOlvidada);
-// Reenvío de confirmación
-authRouter.post("/reenviar-confirmacion", reenviarConfirmacion);
-// Confirmación de email
-authRouter.get("/confirmar-cuenta", confirmarCuenta);
-// Cambio de contraseña
-authRouter.post("/cambiar-contrasenia", cambiarContrasenia);
+authRouter.post("/contrasenia-olvidada", contraseñaOlvidada); // Recuperación de contraseña
+authRouter.post("/reenviar-confirmacion", reenviarConfirmacion); // Reenvío de confirmación
+authRouter.get("/confirmar-cuenta", confirmarCuenta); // Confirmación de email
+authRouter.post("/cambiar-contrasenia", cambiarContrasenia); // Cambio de contraseña
+authRouter.post("/provider/google", authGoogle); //auth con providers
 
-//auth con providers
-authRouter.post("/provider/google", authGoogle);
+
+//Cookie
+authRouter.get('/me', extraerDatosUsuario)
+
 
 export default authRouter;

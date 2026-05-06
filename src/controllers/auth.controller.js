@@ -254,24 +254,15 @@ export const login = async (req, res) => {
 
         const token = generateToken({userId: usuario.id}, "2h");
 
-        // Cambiar userId -> usuarioId, que es el campo real en el modelo Worker
-        const worker = await prisma.worker.findUnique({
-            where: {usuarioId: usuario.id},
-        });
-        const isWorker = !!worker;
+        res.cookie("token_user", token, {
+            httpOnly: true,
+            secure: false, //TODO: Pasar esto a true en producción con HTTPS
+            sameSite: "Lax",
+            maxAge: 1000 * 60 * 60 * 24
+        })
 
-        res.status(200).json({
-            message: "Login exitoso",
-            token,
-            usuario: {
-                id: usuario.id,
-                email: usuario.email,
-                nombre: usuario.nombre,
-                apellido: usuario.apellido,
-                fotoPerfilUsuario: usuario.fotoPerfilUsuario,
-                isWorker,
-            },
-        });
+        return res.status(200).json({message: "Login exitoso",});
+
     } catch (error) {
         console.error("Login error: ", error);
         res.status(500).json({message: "Error en el login", error: error.message});
@@ -402,31 +393,58 @@ export const authGoogle = async (req, res) => {
 
         const usuario = authProv.usuario;
 
-        // TODO: VER LO DEL WORKER LO PONGO EN FALSE
-        //
-        // // 3\) Verifico si es worker
-        // const worker = await prisma.worker.findUnique({
-        //     where: { usuarioId: usuario.id },
-        // });
-        // const isWorker = !!worker;
-
-        // 4\) Genero token usando el id del usuario
         const token = generateToken({userId: usuario.id}, "2h");
 
-        return res.status(200).json({
-            message: "Login exitoso",
-            token,
-            usuario: {
-                id: usuario.id,
-                email: usuario.email,
-                nombre: usuario.nombre,
-                apellido: usuario.apellido,
-                fotoPerfilUsuario: usuario.fotoPerfilUsuario,
-                isWorker: false,
-            },
-        });
+        res.cookie("token_user", token, {
+            httpOnly: true,
+            secure: false, //TODO: Pasar esto a true en producción con HTTPS
+            sameSite: "Lax",
+            maxAge: 1000 * 60 * 60 * 24
+        })
+
+        return res.status(200).json({message: "Login exitoso",});
     } catch (err) {
         console.error(err);
         return res.status(500).json({message: "Error en auth/google"});
     }
 };
+
+
+
+export const extraerDatosUsuario = async (req, res) => {
+
+    const token = req.cookies.token_user;
+
+
+    if (!token) return res.status(401).json({message: "No esta autenticado."})
+
+    try {
+        const decoded = verifyToken(token);
+
+        const usuario = await prisma.usuario.findUnique({
+            where: {id: decoded.userId},
+            select: {
+                id: true,
+                nombre: true,
+                apellido: true,
+                email: true,
+                fotoPerfilUsuario: true,
+            },
+        });
+
+        console.log(usuario)
+
+
+        if (!usuario) {
+            return res.status(404).json({message: "Usuario no encontrado"});
+        }
+
+        return res.status(200).json({user: usuario});
+    } catch (error) {
+        console.error("extraerDatosUsuario error:", error);
+        return res.status(401).json({message: "Token inválido o error al extraer datos"});
+    }
+
+
+
+}
