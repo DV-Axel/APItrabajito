@@ -422,14 +422,19 @@ export const extraerDatosUsuario = async (req, res) => {
         const decoded = verifyToken(token);
 
         const usuario = await prisma.usuario.findUnique({
-            where: {id: decoded.userId},
+            where: { id: decoded.userId },
             select: {
                 id: true,
                 nombre: true,
                 apellido: true,
                 email: true,
                 fotoPerfilUsuario: true,
-            },
+                worker: {
+                    select: {
+                        id: true
+                    }
+                }
+            }
         });
 
         console.log(usuario)
