@@ -49,6 +49,7 @@ coverage/
 !public/images/profilePicture/avatar.jpeg
 public/images/jobRequests/*
 public/images/profilePicture/*
+public/images/profilePictureWorker/*
 
 public/files/companyregistration/*
 public/images/profilePictureSponsor/*
