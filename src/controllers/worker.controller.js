@@ -1,254 +1,241 @@
-import { prisma } from "../data/prisma.js";
-import { parseIfString } from "../data/helpers.js";
-import path from 'path';
-import fs from 'fs';
+import {prisma} from "../data/prisma.js";
+import {parseIfString} from "../data/helpers.js";
+import {envioCorreoRegistroWorker} from "../data/envioCorreoRegistroWorker.js";
+import {envioCorreoAvisoSponsorNuevoWorker} from "../data/envioCorreoAvisoSponsorNuevoWorker.js"
 
 export const registrarWorker = async (req, res) => {
-    try{
-        console.log(req.body)
-        return res.status(500).send({ message: "test" });
-
-    }catch (error){
-        console.log(error)
-        return res.status(500).send({ message: "Error interno del servidor" });
-
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// CONTROLADORES VIEJOS
-export const createWorker = async (req, res) => {
     try {
-        console.log(req.body);
-        console.log(req.files);
+        const {
+            idUser,
+            idSponsor,
+            subtitulo,
+            descripcion,
+            provincias,
+            diasTrabajo,
+            turnos,
+            categorias,
+            tipoIdentificacion,
+            cuitEmpresa,
+            nombreEmpresa,
+            nombreContacto,
+            motivoUnirse,
+        } = req.body;
 
-        const { subtitle, description, idUser, idSponsor, workLocation, workingDays, workingHours, rubros, sponsor } = req.body;
-
-
-        // TODO: Revisar que no se guarde primero la foto y despues se rechace
-        // Guardar la imagen en disco
-        const photoFile = req.files?.photo?.[0];
-        let photoPath = null;
-        if (photoFile) {
-            const uploadDir = path.join(process.cwd(), "public/images/profilePictureWorker");
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
-            const fileName = Date.now() + "-" + photoFile.originalname;
-            const fullPath = path.join(uploadDir, fileName);
-            fs.writeFileSync(fullPath, photoFile.buffer);
-            // Ruta relativa para guardar en la base de datos
-            photoPath = `images/profilePictureWorker/${fileName}`;
-        }
-
-        // Parseo si vienen como string (form-data)
-        const workLocationParsed = parseIfString(workLocation);
-        const workingDaysParsed = parseIfString(workingDays);
-        const workingHoursParsed = parseIfString(workingHours);
-        const rubrosParsed = parseIfString(rubros);
-        const sponsorParsed = parseIfString(sponsor);
-
-        const tipoIdentificacionSponsor = sponsorParsed.tipo;
-        const identificadorSponsor = sponsorParsed.cuit || sponsorParsed.nombre;
-
-        const extraData = { ...sponsorParsed };
-        delete extraData.tipo;
-        delete extraData.cuit;
-        delete extraData.nombre;
-
-        console.log(idUser)
-
-        const worker = await prisma.worker.create({
-            data: {
-                user: { connect: { id: Number(idUser) } },
-                description,
-                profilePicture: photoPath,
-                subtitle,
-                extraData,
-                workLocation: workLocationParsed,
-                workingDays: workingDaysParsed,
-                workingHours: workingHoursParsed
-            }
-        });
-
-        // Guardar rubros en worker_categories
-        const rubrosArray = Array.isArray(rubrosParsed)
-            ? rubrosParsed.map(Number)
-            : [];
-
-        if (rubrosArray.length > 0) {
-            await prisma.workerCategory.createMany({
-                data: rubrosArray.map(rubroId => ({
-                    workerId: worker.id,
-                    categoryId: rubroId,
-                }))
-            });
-        }
-
-        
-
-        //Creacion del Worker
-        if (idSponsor) {
-            await prisma.sponsorWorker.create({
-                data: {
-                    sponsorId: Number(idSponsor), // Conversión a número
-                    workerId: worker.id,
-                    isActive: true
+        // Validación si ya existe como worker
+        const existeWorker =
+            await prisma.worker.findUnique({
+                where: {
+                    usuarioId: Number(idUser)
                 }
             });
+
+        if (existeWorker) {
+            return res.status(400).send({
+                message: "El usuario ya es un worker"
+            });
+        }
+
+        // Validación campos obligatorios
+        if (
+            !idUser ||
+            !subtitulo ||
+            !descripcion ||
+            !provincias ||
+            !diasTrabajo ||
+            !turnos ||
+            !categorias ||
+            !tipoIdentificacion ||
+            (tipoIdentificacion === "cuit" && !cuitEmpresa) ||
+            (tipoIdentificacion === "nombre" && !nombreEmpresa) ||
+            !nombreContacto ||
+            !motivoUnirse
+        ) {
+            return res.status(400).send({
+                message: "Faltan datos obligatorios"
+            });
+        }
+
+        // Validación foto
+        if (
+            !req.files ||
+            !req.files.fotoPerfilWorker ||
+            req.files.fotoPerfilWorker.length === 0
+        ) {
+            return res.status(400).send({
+                message: "Debe cargar una foto"
+            });
+        }
+
+        const fotoPerfilPath =
+            `/images/profilePictureWorker/${req.files.fotoPerfilWorker[0].filename}`;
+
+        // Buscar sponsor
+        const sponsor =
+            await prisma.sponsor.findUnique({
+                where: {
+                    id: Number(idSponsor)
+                },
+                include: {
+                    sponsorServicios: true
+                }
+            });
+
+        if (!sponsor) {
+            return res.status(404).send({
+                message: "Sponsor no encontrado"
+            });
+        }
+
+        // Validar categorías permitidas
+        const serviciosSponsor =
+            sponsor.sponsorServicios.map(
+                ss => ss.servicioId
+            );
+
+        const categoriasArray =
+            parseIfString(categorias);
+
+        const categoriasIds =
+            categoriasArray.map(Number);
+
+        const categoriasValidas =
+            categoriasIds.every(catId =>
+                serviciosSponsor.includes(catId)
+            );
+
+        if (!categoriasValidas) {
+            return res.status(400).send({
+                message:
+                    "El sponsor no ofrece todos los servicios requeridos por el worker"
+            });
         }
 
 
+        //El insert como transaccion da la posibilidad de hacer rollback si algo falla en el proceso, evitando datos inconsistentes
+        const workerRegistrado =
+            await prisma.$transaction(
+                async (tx) => {
 
-        res.status(201).send("Worker creado exitosamente");
+                    // Crear worker
+                    const worker =
+                        await tx.worker.create({
+                            data: {
+                                usuario: {
+                                    connect: {
+                                        id: Number(idUser)
+                                    }
+                                },
+
+                                tituloProfesional:
+                                subtitulo,
+
+                                descripcionProfesional:
+                                descripcion,
+
+                                estado: {
+                                    connect: {
+                                        id: 7
+                                    }
+                                },
+
+                                fotoPerfilWorker:
+                                fotoPerfilPath,
+
+                                zonasTrabajo:
+                                    parseIfString(
+                                        provincias
+                                    ),
+
+                                diasTrabajo:
+                                    parseIfString(
+                                        diasTrabajo
+                                    ),
+
+                                turnosTrabajo:
+                                    parseIfString(
+                                        turnos
+                                    ),
+
+                                datosExtraWorker: {
+                                    tipoIdentificacion,
+                                    cuitEmpresa,
+                                    nombreEmpresa,
+                                    nombreContacto,
+                                    motivoUnirse
+                                }
+                            },
+
+                            include: {
+                                usuario: true
+                            }
+                        });
+
+                    // Asociar sponsor-worker
+                    await tx.sponsor_worker.create({
+                        data: {
+                            workerId: worker.id,
+                            sponsorId:
+                                Number(idSponsor),
+                            estadoId: 7
+                        }
+                    });
+
+                    // Asignar categorías
+                    const servicios =
+                        await tx.ServicioWorker.createMany({
+                            data: categoriasIds.map(
+                                catId => ({
+                                    workerId:
+                                    worker.id,
+                                    servicioId:
+                                    catId
+                                })
+                            )
+                        });
+
+                    // Si no insertó nada -> rollback
+                    if (servicios.count === 0) {
+                        throw new Error(
+                            "Error al asignar servicios"
+                        );
+                    }
+
+                    // Esto retorna la transacción
+                    return worker;
+                }
+            );
+
+
+        //Dejo los emails afuera por que no dependen de la base de datos.
+        try {
+            await envioCorreoRegistroWorker(
+                workerRegistrado.usuario.email,
+                workerRegistrado.usuario.nombre,
+                workerRegistrado.usuario.apellido
+            );
+
+            await envioCorreoAvisoSponsorNuevoWorker(
+                sponsor.emailEmpresa,
+                sponsor.nombreComercial,
+            )
+        } catch (emailError) {
+            console.error(
+                "Error enviando email:",
+                emailError
+            );
+        }
+
+        return res.status(400).send({
+            message:
+                "Test"
+        });
+
     } catch (error) {
         console.error(error);
-        res.status(500).send({ message: "Error interno del servidor" });
-    }
-}
 
-
-export const getWorkerById = async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const worker = await prisma.worker.findUnique({
-            where: { id: Number(id) }
+        return res.status(500).send({
+            message:
+                "Error interno del servidor"
         });
-
-        if (!worker) {
-            return res.status(404).json({ message: "Worker no encontrado" });
-        }
-
-        return res.status(200).json(worker);
-    } catch (err) {
-        return res.status(500).send({ message: "Error interno del servidor" });
-    }
-}
-
-
-
-
-export const getServicesByCategory = async (req, res) => {
-    const {id} = req.params;
-
-    try{
-        //Secuencia para traer los servicios del rubro del worker
-        // 1. Verificar que el usuario es un worker
-        const worker = await prisma.worker.findUnique({
-            where: { userId: Number(id) }
-        });
-
-        if (!worker) {
-            return res.status(404).json({ message: "El usuario no es un worker" });
-        }
-
-        // 2. Obtener los rubros (categorías) del worker
-        const workerCategories = await prisma.workerCategory.findMany({
-            where: { workerId: worker.id },
-            select: { categoryId: true }
-        });
-        const categoryIds = workerCategories.map(wc => wc.categoryId);
-
-        if (categoryIds.length === 0) {
-            return res.status(200).json([]); // No tiene rubros asignados
-        }
-
-
-        // 3. Buscar las solicitudes (JobRequest) que coincidan con los rubros
-        const jobRequests = await prisma.jobRequest.findMany({
-            where: {
-                serviceKey: { in: categoryIds }
-            }
-        });
-
-        console.log(jobRequests);
-
-        res.status(200).json(jobRequests);
-    }catch(error){
-        res.status(500).send({ message: "Error interno del servidor" });
-    }
-}
-
-// javascript
-export const getJobRequestsAppliedByWorkerId = async (req, res) => {
-    const { id } = req.params;
-    const workerId = Number(id);
-    if (!id || Number.isNaN(workerId)) {
-        return res.status(400).json({ message: "ID de worker inválido" });
-    }
-
-    try {
-        const applications = await prisma.application.findMany({
-            where: { workerId },
-            include: {
-                jobRequest: {
-                    select: {
-                        id: true,
-                        title: true,
-                        jobCreationDate: true,
-                        date: true,
-                        description: true,
-                        address: true,
-                        finalBudget: true,
-                        statusId: true,
-                        userId: true,
-                        serviceKey: true,
-                        photos: true,
-                        isVisible: true
-                    }
-                }
-            },
-            orderBy: [{ submittedAt: 'desc' }]
-        });
-
-        // Mapear a jobRequests, agregando datos de la aplicación y evitando duplicados
-        const seen = new Set();
-        const jobRequests = [];
-        for (const app of applications) {
-            const jr = app.jobRequest;
-            if (!jr || seen.has(jr.id)) continue;
-            seen.add(jr.id);
-            jobRequests.push({
-                ...jr,
-                appliedAt: app.submittedAt,
-                applicationId: app.id,
-                applicationBudget: app.budget
-            });
-        }
-
-        return res.status(200).json(jobRequests);
-    } catch (error) {
-        console.error("Error en getJobRequestsAppliedByWorkerId:", error);
-        return res.status(500).json({ message: "Error interno del servidor" });
     }
 };

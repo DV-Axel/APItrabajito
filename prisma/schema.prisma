@@ -110,7 +110,7 @@ model tokenVerificacionCorreo {
   @@map("tokens_verificacion_correo")
 }
 
-model tokenVerificacionCorreoSponsor{
+model tokenVerificacionCorreoSponsor {
   id              Int      @id @default(autoincrement())
   token           String   @unique
   sponsorId       Int      @unique
@@ -168,6 +168,9 @@ model Estado {
 
   solicitudesServicio SolicitudServicio[]
 
+  workers         Worker[]
+  sponsorWorkers  sponsor_worker[]
+
   @@map("estados")
 }
 
@@ -175,7 +178,7 @@ model Worker {
   id                     Int      @id @default(autoincrement())
   tituloProfesional      String   @db.VarChar(100)
   descripcionProfesional String   @db.Text
-  fotoPerfilUsuario      String?
+  fotoPerfilWorker       String
   zonasTrabajo           Json?
   diasTrabajo            Json?
   turnosTrabajo          Json?
@@ -183,6 +186,7 @@ model Worker {
   trabajosCompletados    Int      @default(0)
   fechaRegistroWorker    DateTime @default(now())
   datosExtraWorker       Json?
+  estadoId               Int
 
   // ✅ FK + unique: un usuario solo puede tener 1 worker
   usuarioId Int     @unique
@@ -190,6 +194,11 @@ model Worker {
 
   // ✅ N–N con Servicio por tabla puente
   serviciosWorker ServicioWorker[]
+  sponsorWorkers  sponsor_worker[]
+
+  // relación con Estado
+  estado  Estado @relation(fields: [estadoId], references: [id])
+
 
   @@map("workers")
 }
@@ -199,7 +208,7 @@ model ServicioWorker {
   workerId           Int
   servicioId         Int
   tieneCertificacion Boolean  @default(false)
-  estaActivo         Boolean  @default(true)
+  estaActivo         Boolean  @default(false)
   fechaRegistro      DateTime @default(now())
 
   worker   Worker   @relation(fields: [workerId], references: [id])
@@ -220,7 +229,7 @@ model Sponsor {
   emailEmpresa      String   @unique @db.VarChar(80)
   telefonoEmpresa   String   @db.VarChar(20)
   calle             String   @db.VarChar(60)
-  cuentaVerificada   Boolean  @default(false)
+  cuentaVerificada  Boolean  @default(false)
   numeroCalle       Int
   piso              String?  @db.VarChar(10)
   oficina           String?  @db.VarChar(10)
@@ -233,8 +242,9 @@ model Sponsor {
   fotoPerfilSponsor String?
   fechaRegistro     DateTime @default(now()) @db.Date
 
-  sponsorServicios SponsorServicio[]
+  sponsorServicios               SponsorServicio[]
   tokenVerificacionCorreoSponsor tokenVerificacionCorreoSponsor?
+  sponsorWorkers                 sponsor_worker[]
 
   @@map("sponsors")
 }
@@ -251,4 +261,20 @@ model SponsorServicio {
 
   @@unique([sponsorId, servicioId])
   @@map("sponsors_servicios")
+}
+
+model sponsor_worker {
+  id          Int       @id @default(autoincrement())
+  sponsorId   Int
+  workerId    Int
+  fechaInicio DateTime  @default(now())
+  fechaFin    DateTime?
+  estadoId    Int
+
+  sponsor Sponsor             @relation(fields: [sponsorId], references: [id])
+  worker  Worker              @relation(fields: [workerId], references: [id])
+  estado  Estado @relation(fields: [estadoId], references: [id])
+
+  @@unique([sponsorId, workerId])
+  @@map("sponsors_workers")
 }

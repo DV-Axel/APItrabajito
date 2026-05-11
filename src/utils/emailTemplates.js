@@ -38,3 +38,24 @@ export function getCorreoResetPasswordSponsor(resetUrl, email) {
 
     return html;
 }
+
+
+export function getCorreoRegistroWorker(emailWorker , nombreWorker, apellidoWorker) {
+    const templatePath = path.resolve("templates", "CorreoRegistroWorker.html")
+    let html = fs.readFileSync(templatePath, "utf8");
+    html = html.replace(/\$\{correoElectronico\}/g, emailWorker);
+    html = html.replace(/\$\{nombre\}/g, nombreWorker);
+    html = html.replace(/\$\{apellido\}/g, apellidoWorker);
+
+    return html
+}
+
+export function getCorreoSponsorAvisoNuevoWorker(nombreComercialSponsor, emailSponsor){
+    const templatePath = path.resolve("templates", "CorreoAvisoNuevoWorkerASponsor.html")
+    let html = fs.readFileSync(templatePath, "utf8");
+    html = html.replace(/\$\{nombreSponsor\}/g, nombreComercialSponsor);
+    html = html.replace(/\$\{correoSponsor\}/g, emailSponsor);
+    html = html.replace(/\$\{year\}/g, new Date().getFullYear());
+
+    return html
+}

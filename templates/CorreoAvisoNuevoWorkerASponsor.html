@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <title>Nueva solicitud pendiente - Trabajito</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #f4f4f0;
+            color: #2e2a24;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .email-wrapper {
+            width: 100%;
+            background-color: #f4f4f0;
+            padding: 40px 16px;
+        }
+
+        .email-container {
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        .email-header {
+            text-align: center;
+            padding-bottom: 28px;
+        }
+
+        .logo-mark {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background-color: #3b7fc4;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2e2a24;
+        }
+
+        .email-card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow:
+                    0 2px 8px rgba(0,0,0,0.06),
+                    0 0 1px rgba(0,0,0,0.04);
+        }
+
+        .card-accent {
+            height: 5px;
+            background:
+                    linear-gradient(
+                            90deg,
+                            #3b7fc4 0%,
+                            #5b9fd4 100%
+                    );
+        }
+
+        .card-body {
+            padding: 40px 48px;
+        }
+
+        .icon-circle {
+            width: 64px;
+            height: 64px;
+            background-color: #eef4fb;
+            border-radius: 50%;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2e2a24;
+            text-align: center;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            color: #7a7060;
+            text-align: center;
+            line-height: 1.7;
+            margin-bottom: 28px;
+        }
+
+        .highlight {
+            color: #3b7fc4;
+            font-weight: 600;
+        }
+
+        .status-box {
+            background-color: #eef4fb;
+            border: 1px solid #d6e6f7;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 28px;
+        }
+
+        .status-box p {
+            color: #365b87;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .status-box strong {
+            font-weight: 700;
+        }
+
+        .cta-box {
+            background-color: #f8f7f4;
+            border: 1px solid #ede9e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 28px;
+            text-align: center;
+        }
+
+        .cta-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2e2a24;
+        }
+
+        .cta-text {
+            font-size: 14px;
+            color: #5c5348;
+            line-height: 1.7;
+        }
+
+        .security-note {
+            font-size: 13px;
+            color: #7a7060;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .email-footer {
+            padding: 28px 48px;
+            text-align: center;
+        }
+
+        .footer-copy {
+            font-size: 12px;
+            color: #b0a898;
+            line-height: 1.6;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .card-body {
+                padding: 32px 24px;
+            }
+
+            .email-footer {
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="email-wrapper">
+    <div class="email-container">
+
+        <!-- Header -->
+        <div class="email-header">
+            <div class="logo-mark">
+
+                <div class="logo-icon">
+                    <svg width="20" height="20"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="#ffffff"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                </div>
+
+                <span class="logo-name">
+                    Trabajito
+                </span>
+
+            </div>
+        </div>
+
+        <!-- Card -->
+        <div class="email-card">
+
+            <div class="card-accent"></div>
+
+            <div class="card-body">
+
+                <!-- Icon -->
+                <div class="icon-circle">
+                    <svg width="30" height="30"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="#3b7fc4"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                    </svg>
+                </div>
+
+                <!-- Title -->
+                <h1>
+                    Tienes una nueva solicitud pendiente
+                </h1>
+
+                <p class="subtitle">
+                    Hola
+                    <span class="highlight">
+                        ${nombreSponsor}
+                    </span>,
+                    un nuevo trabajador ha enviado una solicitud
+                    para formar parte de tu red de Workers en
+                    <strong>Trabajito</strong>.
+                </p>
+
+                <!-- Status -->
+                <div class="status-box">
+                    <p>
+                        <strong>Acción requerida:</strong><br>
+                        Ingresa a tu bandeja de solicitudes de sponsoreo
+                        para revisar la información del trabajador
+                        y decidir si deseas aprobar o rechazar
+                        la solicitud pendiente.
+                    </p>
+                </div>
+
+                <!-- CTA info -->
+                <div class="cta-box">
+
+                    <div class="cta-title">
+                        Revisa tus solicitudes pendientes
+                    </div>
+
+                    <div class="cta-text">
+                        Encontrarás esta nueva solicitud
+                        dentro del panel de sponsor en la sección
+                        de solicitudes de Workers pendientes.
+                    </div>
+
+                </div>
+
+                <p class="security-note">
+                    Este correo es una notificación automática
+                    de Trabajito para ayudarte a mantener
+                    actualizada tu red de trabajadores.
+                </p>
+
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="email-footer">
+            <p class="footer-copy">
+                © Trabajito App ${year}
+                &ndash; Tu solución diaria.<br>
+                Este correo fue enviado a
+                <strong>${correoSponsor}</strong>
+                porque tienes una cuenta de Sponsor activa.
+            </p>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
+```
