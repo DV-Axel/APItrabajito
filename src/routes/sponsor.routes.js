@@ -8,7 +8,10 @@ import {
     cambiarContrasenia,
     extraerDatosSponsor,
     perfilSponsor,
-    actualizarPerfilSponsor
+    actualizarPerfilSponsor,
+    busquedaSponsorPorIdentificacion,
+    pendientesSponsoreo,
+    datosHeaderSponsor
 } from '../controllers/sponsor.controller.js';
 import {uploadSponsorFiles} from '../middlewares/files/uploadSponsorFiles.js';
 
@@ -22,6 +25,9 @@ sponsorRouter.get('/confirmar-cuenta', confirmarCuenta)
 sponsorRouter.post('/contrasenia-olvidada', contraseñaOlvidada)
 sponsorRouter.post('/cambiar-contrasenia', cambiarContrasenia)
 sponsorRouter.post('/login-sponsor', loginSponsor)
+sponsorRouter.get('/buscar-sponsor-por-identificacion', busquedaSponsorPorIdentificacion)
+sponsorRouter.get('/pendientes-sponsoreo/:id', pendientesSponsoreo)
+sponsorRouter.get('/datos-header-sponsor/:id', datosHeaderSponsor)
 
 //Cookie
 sponsorRouter.get('/me', extraerDatosSponsor)

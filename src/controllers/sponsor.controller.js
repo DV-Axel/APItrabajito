@@ -421,7 +421,7 @@ export const perfilSponsor = async (req, res) => {
 
 export const actualizarPerfilSponsor = async (req, res) => {
     try {
-        const { id } = req.params;
+        const {id} = req.params;
 
         const {
             nombreComercial,
@@ -441,19 +441,19 @@ export const actualizarPerfilSponsor = async (req, res) => {
 
         console.log(req.body)
 
-        if (!nombreComercial ||!provincia ||!partido || !numeroCalle || !emailEmpresa || !telefonoEmpresa || !calle  || !codigoPostal || !representante) {
-            return res.status(400).json({ message: "Faltan datos obligatorios" });
+        if (!nombreComercial || !provincia || !partido || !numeroCalle || !emailEmpresa || !telefonoEmpresa || !calle || !codigoPostal || !representante) {
+            return res.status(400).json({message: "Faltan datos obligatorios"});
         }
 
         // Validar que el sponsor exista
-        const sponsor = await prisma.sponsor.findUnique({ where: { id: Number(id) } });
+        const sponsor = await prisma.sponsor.findUnique({where: {id: Number(id)}});
         if (!sponsor) {
-            return res.status(404).json({ message: "Sponsor no encontrado" });
+            return res.status(404).json({message: "Sponsor no encontrado"});
         }
 
         // Actualizar datos
         const sponsorActualizado = await prisma.sponsor.update({
-            where: { id: Number(id) },
+            where: {id: Number(id)},
             data: {
                 nombreComercial,
                 numeroCalle: Number(numeroCalle),
@@ -477,6 +477,202 @@ export const actualizarPerfilSponsor = async (req, res) => {
         });
     } catch (error) {
         console.error("actualizarPerfilSponsor error:", error);
-        return res.status(500).json({ message: "Error interno" });
+        return res.status(500).json({message: "Error interno"});
+    }
+};
+
+
+export const busquedaSponsorPorIdentificacion = async (req, res) => {
+    try {
+        const {
+            tipoIdentificacion,
+            cuitEmpresa,
+            nombreEmpresa
+        } = req.query
+
+        let sponsor = null
+
+        if (tipoIdentificacion === "cuit") {
+            sponsor = await prisma.sponsor.findFirst({
+                where: {
+                    numeroDocumento: cuitEmpresa
+                }
+            })
+        }
+
+        if (tipoIdentificacion === "nombre") {
+            sponsor = await prisma.sponsor.findFirst({
+                where: {
+                    nombreComercial: {
+                        contains: nombreEmpresa,
+                        mode: "insensitive"
+                    }
+                }
+            })
+        }
+
+        if (!sponsor) {
+            return res.status(404).send({
+                message: "No se encontró un sponsor con esos datos"
+            })
+        }
+
+        return res.status(200).send(sponsor)
+
+    } catch (error) {
+        console.log(error)
+
+        return res.status(500).send({
+            message: "Error interno del servidor"
+        })
+    }
+}
+
+
+export const pendientesSponsoreo = async (req, res) => {
+    try {
+        const {id} = req.params
+
+        // Validaciones
+        if (!id) {
+            return res.status(400).send({
+                message:
+                    "No se esta enviando id del sponsor"
+            })
+        }
+
+        const solicitudesSponsoreo =
+            await prisma.sponsor_worker.findMany({
+                where: {
+                    sponsorId: Number(id),
+                    estadoId: 7 // Pendiente
+                },
+
+                include: {
+                    worker: {
+                        select: {
+                            id: true,
+                            tituloProfesional: true,
+                            descripcionProfesional: true,
+                            fotoPerfilWorker: true,
+                            rating: true,
+                            trabajosCompletados: true,
+                            fechaRegistroWorker: true,
+
+                            usuario: {
+                                select: {
+                                    id: true,
+                                    nombre: true,
+                                    apellido: true,
+                                    email: true,
+                                    telefono: true,
+                                    fotoPerfilUsuario: true,
+                                    partido: true,
+                                    provincia: true
+                                }
+                            },
+
+                            // Servicios del worker
+                            serviciosWorker: {
+                                select: {
+                                    id: true,
+                                    tieneCertificacion: true,
+                                    estaActivo: true,
+                                    fechaRegistro: true,
+
+                                    servicio: {
+                                        select: {
+                                            id: true,
+                                            nombre: true,
+                                            icono: true,
+                                            color: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+
+                    estado: {
+                        select: {
+                            id: true,
+                            nombre: true
+                        }
+                    }
+                }
+            })
+
+        return res
+            .status(200)
+            .send(solicitudesSponsoreo || [])
+
+    } catch (error) {
+        console.log(error)
+
+        return res.status(500).send({
+            message:
+                "Error interno del servidor"
+        })
+    }
+}
+
+
+export const datosHeaderSponsor = async (req, res) => {
+    try {
+        const sponsorId = Number(req.params.id);
+
+        if (!sponsorId || Number.isNaN(sponsorId)) {
+            return res.status(400).send({
+                error: "ID de sponsor inválido",
+            });
+        }
+
+        const [sponsor, workersActivos, pendientesSponsoreo] =
+            await Promise.all([
+                prisma.sponsor.findUnique({
+                    where: {
+                        id: sponsorId,
+                    },
+
+                    select: {
+                        id: true,
+                        fotoPerfilSponsor:true,
+                        razonSocial: true,
+                        nombreComercial: true,
+                    },
+                }),
+
+                prisma.sponsor_worker.count({
+                    where: {
+                        sponsorId,
+                        estadoId: 8,
+                    },
+                }),
+
+                prisma.sponsor_worker.count({
+                    where: {
+                        sponsorId,
+                        estadoId: 7,
+                    },
+                }),
+            ]);
+
+        if (!sponsor) {
+            return res.status(404).send({
+                error: "Sponsor no encontrado",
+            });
+        }
+
+        return res.status(200).send({
+            ...sponsor,
+            workersActivos,
+            pendientesSponsoreo,
+        });
+    } catch (error) {
+        console.error("datosHeaderSponsor error:", error);
+
+        return res.status(500).send({
+            error: "Error interno del servidor",
+        });
     }
 };

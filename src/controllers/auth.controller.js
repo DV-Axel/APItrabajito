@@ -431,7 +431,8 @@ export const extraerDatosUsuario = async (req, res) => {
                 fotoPerfilUsuario: true,
                 worker: {
                     select: {
-                        id: true
+                        id: true,
+                        estadoId: true,
                     }
                 }
             }
