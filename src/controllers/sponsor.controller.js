@@ -545,7 +545,6 @@ export const pendientesSponsoreo = async (req, res) => {
             await prisma.sponsor_worker.findMany({
                 where: {
                     sponsorId: Number(id),
-                    estadoId: 7 // Pendiente
                 },
 
                 include: {
@@ -670,6 +669,56 @@ export const datosHeaderSponsor = async (req, res) => {
         });
     } catch (error) {
         console.error("datosHeaderSponsor error:", error);
+
+        return res.status(500).send({
+            error: "Error interno del servidor",
+        });
+    }
+};
+
+export const decisionSponsoreo = async (req, res) => {
+    const { id } = req.params;
+    const { accion } = req.body;
+
+    console.log(req.body);
+    console.log(req.params);
+
+    try {
+        if (!accion) {
+            return res.status(400).send({
+                message: "No seleccionó una acción",
+            });
+        }
+
+        let nuevoEstado;
+
+        if (accion === "accept") {
+            nuevoEstado = 8;
+        } else if (accion === "reject") {
+            nuevoEstado = 9;
+        } else {
+            return res.status(400).send({
+                message: "Acción inválida",
+            });
+        }
+
+        await prisma.sponsor_worker.update({
+            where: {
+                id: parseInt(id),
+            },
+            data: {
+                estadoId: nuevoEstado,
+            },
+        });
+
+        return res.status(200).send({
+            message:
+                accion === "accept"
+                    ? "Sponsoreo aceptado"
+                    : "Sponsoreo rechazado",
+        });
+    } catch (error) {
+        console.error("decisionSponsoreo error:", error);
 
         return res.status(500).send({
             error: "Error interno del servidor",
