@@ -725,3 +725,80 @@ export const decisionSponsoreo = async (req, res) => {
         });
     }
 };
+
+export const perfilWorker = async (req, res) => {
+    try {
+        const workerId = Number(req.params.id);
+
+        console.log('workerId', workerId)
+
+        if (!workerId || Number.isNaN(workerId)) {
+            return res.status(400).send({
+                error: "ID de worker inválido",
+            });
+        }
+
+        const worker = await prisma.worker.findUnique({
+            where: {
+                id: workerId,
+            },
+
+            select: {
+                id: true,
+                tituloProfesional: true,
+                descripcionProfesional: true,
+                fotoPerfilWorker: true,
+                rating: true,
+                trabajosCompletados: true,
+                fechaRegistroWorker: true,
+
+                usuario: {
+                    select: {
+                        id: true,
+                        nombre: true,
+                        apellido: true,
+                        email: true,
+                        telefono: true,
+                        fotoPerfilUsuario: true,
+                        partido: true,
+                        provincia: true,
+                        localidad: true
+                    }
+                },
+
+                // Servicios del worker
+                serviciosWorker: {
+                    select: {
+                        id: true,
+                        tieneCertificacion: true,
+                        estaActivo: true,
+                        fechaRegistro: true,
+
+                        servicio: {
+                            select: {
+                                id: true,
+                                nombre: true,
+                                icono: true,
+                                color: true
+                            }
+                        }
+                    }
+                }
+            },
+        });
+
+        if (!worker) {
+            return res.status(404).send({
+                error: "Worker no encontrado",
+            });
+        }
+
+        return res.status(200).send(worker);
+    } catch (error) {
+        console.error("perfilWorker error:", error);
+
+        return res.status(500).send({
+            error: "Error interno del servidor",
+        });
+    }
+};
