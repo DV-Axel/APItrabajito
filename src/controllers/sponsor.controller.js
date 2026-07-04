@@ -702,14 +702,28 @@ export const decisionSponsoreo = async (req, res) => {
             });
         }
 
-        await prisma.sponsor_worker.update({
+        const idWorker = await prisma.sponsor_worker.update({
             where: {
                 id: parseInt(id),
             },
             data: {
                 estadoId: nuevoEstado,
             },
+            select: {
+                workerId: true,
+            },
         });
+
+        if(nuevoEstado === 8){
+            await prisma.worker.update({
+                where: {
+                    id: parseInt(idWorker.workerId),
+                },
+                data: {
+                    estadoId: 8,
+                }
+            })
+        }
 
         return res.status(200).send({
             message:
@@ -802,3 +816,97 @@ export const perfilWorker = async (req, res) => {
         });
     }
 };
+
+
+
+export const workersBySponsorId = async(req,res) => {
+
+    try{
+
+        const sponsorId = Number(req.params.id);
+
+        console.log(sponsorId)
+
+        if(!sponsorId || Number.isNaN(sponsorId)){
+            return res.status(400).send({
+                error: "ID de sponsor inválido",
+            });
+        }
+
+        const workers = await prisma.sponsor_worker.findMany({
+            where: {
+                sponsorId: sponsorId,
+                estadoId: 8 // Solo los aprobados
+            },
+            include: {
+                worker: {
+                    select: {
+                        id: true,
+                        tituloProfesional: true,
+                        descripcionProfesional: true,
+                        fotoPerfilWorker: true,
+                        rating: true,
+                        trabajosCompletados: true,
+                        fechaRegistroWorker: true,
+                        zonasTrabajo: true,
+
+                        usuario: {
+                            select: {
+                                id: true,
+                                nombre: true,
+                                apellido: true,
+                                email: true,
+                                telefono: true,
+                                fotoPerfilUsuario: true,
+                                partido: true,
+                                provincia: true
+                            }
+                        },
+
+                        // Servicios del worker
+                        serviciosWorker: {
+                            select: {
+                                id: true,
+                                tieneCertificacion: true,
+                                estaActivo: true,
+                                fechaRegistro: true,
+
+                                servicio: {
+                                    select: {
+                                        id: true,
+                                        nombre: true,
+                                        icono: true,
+                                        color: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+
+                estado: {
+                    select: {
+                        id: true,
+                        nombre: true
+                    }
+                }
+            }
+        })
+
+        console.log(workers)
+
+        if(!workers){
+            return res.status(400).send({
+                error: "No se encontraron workers asociados al sponsor",
+            })
+        }
+
+        return res.status(200).send(workers)
+    }catch (error){
+        console.error("workersBySponsorId error:", error);
+
+        return res.status(500).send({
+            error: "Error interno del servidor",
+        });
+    }
+}

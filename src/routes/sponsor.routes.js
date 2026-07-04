@@ -13,7 +13,8 @@ import {
     pendientesSponsoreo,
     datosHeaderSponsor,
     decisionSponsoreo,
-    perfilWorker
+    perfilWorker,
+    workersBySponsorId
 } from '../controllers/sponsor.controller.js';
 import {uploadSponsorFiles} from '../middlewares/files/uploadSponsorFiles.js';
 
@@ -32,6 +33,7 @@ sponsorRouter.get('/pendientes-sponsoreo/:id', pendientesSponsoreo)
 sponsorRouter.get('/datos-header-sponsor/:id', datosHeaderSponsor)
 sponsorRouter.patch('/decidir-solicitud-sponsoreo/:id', decisionSponsoreo)
 sponsorRouter.get('/perfil-worker/:id', perfilWorker)
+sponsorRouter.get('/workers-por-Sponsor/:id', workersBySponsorId)
 
 //Cookie
 sponsorRouter.get('/me', extraerDatosSponsor)
