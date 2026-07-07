@@ -239,3 +239,43 @@ export const registrarWorker = async (req, res) => {
         });
     }
 };
+
+
+
+export const traerPerfilWorker = async (req, res) => {
+    try {
+        const {id} = req.params;
+
+        const worker = await prisma.worker.findUnique({
+            where: {
+                id: Number(id),
+            },
+            include: {
+                usuario: true,
+                estado: true,
+                serviciosWorker: {
+                    include: {
+                        servicio: true,
+                    },
+                },
+                sponsorWorkers: true,
+            },
+        });
+
+        if (!worker) {
+            return res.status(404).send({
+                message:
+                    "Worker no encontrado"
+            });
+        }
+
+        return res.status(200).send(worker);
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({
+            message:
+                "Error interno del servidor"
+        });
+    }
+};
