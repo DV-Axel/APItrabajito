@@ -279,3 +279,53 @@ export const traerPerfilWorker = async (req, res) => {
         });
     }
 };
+
+export const actualizarPerfilWorker = async (req, res) => {
+    try {
+        const {
+            workerId,
+            tituloProfesional,
+            descripcionProfesional,
+            zonasTrabajo,
+            diasTrabajo,
+            turnosTrabajo,
+        } = req.body;
+
+        if (
+            !workerId ||
+            !tituloProfesional ||
+            !descripcionProfesional ||
+            !zonasTrabajo ||
+            !diasTrabajo ||
+            !turnosTrabajo
+        ) {
+            return res.status(400).send({
+                message: "Datos obligatorios faltantes",
+            });
+        }
+
+        const workerActualizado = await prisma.worker.update({
+            where: {
+                id: Number(workerId),
+            },
+            data: {
+                tituloProfesional,
+                descripcionProfesional,
+                zonasTrabajo,
+                diasTrabajo,
+                turnosTrabajo,
+            },
+        });
+
+        return res.status(200).send({
+            message: "Perfil actualizado con éxito",
+            worker: workerActualizado,
+        });
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).send({
+            message: "Ocurrió un error al actualizar el perfil.",
+        });
+    }
+};
