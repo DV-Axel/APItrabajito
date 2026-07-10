@@ -7,6 +7,8 @@ import {getCorreoDeBienvenida} from "../utils/emailTemplates.js";
 import {envioCorreoToken} from "../data/envioCorreoToken.js";
 import {envioCorreoResetPassword} from "../data/envioCorreoResetPassword.js";
 import {OAuth2Client} from "google-auth-library";
+import { obtenerUsuarioAutenticado } from "../helpers/obtenerUsuarioAutenticado.js";
+
 
 
 export const registrarUsuario = async (req, res) => {
@@ -412,45 +414,27 @@ export const authGoogle = async (req, res) => {
 
 
 export const extraerDatosUsuario = async (req, res) => {
-
-    const token = req.cookies.token_user;
-
-
-    if (!token) return res.status(401).json({message: "No esta autenticado."})
-
     try {
-        const decoded = verifyToken(token);
+        const usuario = await obtenerUsuarioAutenticado(req);
 
-        const usuario = await prisma.usuario.findUnique({
-            where: { id: decoded.userId },
-            select: {
-                id: true,
-                nombre: true,
-                apellido: true,
-                email: true,
-                fotoPerfilUsuario: true,
+        return res.status(200).json({
+            user: {
+                id: usuario.id,
+                nombre: usuario.nombre,
+                apellido: usuario.apellido,
+                email: usuario.email,
+                fotoPerfilUsuario: usuario.fotoPerfilUsuario,
                 worker: {
-                    select: {
-                        id: true,
-                        estadoId: true,
-                    }
-                }
-            }
+                    id: usuario.worker?.id,
+                    estadoId: usuario.worker?.estadoId,
+                },
+            },
         });
-
-        console.log(usuario)
-
-
-        if (!usuario) {
-            return res.status(404).json({message: "Usuario no encontrado"});
-        }
-
-        return res.status(200).json({user: usuario});
     } catch (error) {
         console.error("extraerDatosUsuario error:", error);
-        return res.status(401).json({message: "Token inválido o error al extraer datos"});
+
+        return res.status(401).json({
+            message: error.message,
+        });
     }
-
-
-
-}
+};

@@ -3,7 +3,8 @@ import {uploadWorkerPhoto} from '../middlewares/images/uploadWorkerPhoto.js';
 import {
     registrarWorker,
     traerPerfilWorker,
-    actualizarPerfilWorker
+    actualizarPerfilWorker,
+    traerTrabajosDisponibles
 } from '../controllers/worker.controller.js';
 
 export const workerRouter = Router();
@@ -11,6 +12,7 @@ export const workerRouter = Router();
 workerRouter.post("/registrar-worker", uploadWorkerPhoto, registrarWorker);
 workerRouter.get("/perfil-worker/:id", traerPerfilWorker)
 workerRouter.put("/actualizar-perfil", actualizarPerfilWorker)
+workerRouter.get("/trabajos-disponibles", traerTrabajosDisponibles)
 
 
 export default workerRouter;

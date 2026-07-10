@@ -2,6 +2,8 @@ import {prisma} from "../data/prisma.js";
 import {parseIfString} from "../data/helpers.js";
 import {envioCorreoRegistroWorker} from "../data/envioCorreoRegistroWorker.js";
 import {envioCorreoAvisoSponsorNuevoWorker} from "../data/envioCorreoAvisoSponsorNuevoWorker.js"
+import { obtenerUsuarioAutenticado } from "../helpers/obtenerUsuarioAutenticado.js";
+import {obtenerServiciosWorkerDisponiblesByWorkerId} from "../helpers/obtenerServiciosWorkerDisponiblesByWorkerId.js";
 
 export const registrarWorker = async (req, res) => {
     try {
@@ -326,6 +328,61 @@ export const actualizarPerfilWorker = async (req, res) => {
 
         return res.status(500).send({
             message: "Ocurrió un error al actualizar el perfil.",
+        });
+    }
+};
+
+export const traerTrabajosDisponibles = async (req, res) => {
+    try {
+        const usuario = await obtenerUsuarioAutenticado(req);
+        const workerId = usuario.worker.id;
+        const serviciosWorkerDisponibles = await obtenerServiciosWorkerDisponiblesByWorkerId(workerId);
+
+
+        const serviciosIds = serviciosWorkerDisponibles.map(
+            servicio => servicio.servicioId
+        );
+
+        if (serviciosIds.length === 0) {
+            return [];
+        }
+
+
+
+        // usar workerId para consultar
+        const trabajosDisponibles = await prisma.SolicitudServicio.findMany({
+            where: {
+                estadoId: 1,
+                servicioId: {
+                    in: serviciosIds
+                }
+            },
+            select: {
+                id: true,
+                titulo: true,
+                descripcion: true,
+                servicioId: true,
+                esUrgente: true,
+                fechaCreacion: true,
+                desgloseDireccion: true,
+                fotos: true,
+                preguntasEspeccificas: true,
+                usuario: {
+                    select: {
+                        id: true,
+                        nombre: true,
+                        apellido: true,
+                    }
+                }
+            }
+        });
+
+        return res.status(200).send(trabajosDisponibles);
+
+
+    } catch (error) {
+        return res.status(401).json({
+            message: error.message,
         });
     }
 };
