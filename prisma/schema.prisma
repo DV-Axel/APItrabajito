@@ -159,6 +159,9 @@ model SolicitudServicio {
   estado   Estado   @relation(fields: [estadoId], references: [id])
   servicio Servicio @relation(fields: [servicioId], references: [id])
 
+  postulaciones Postulacion[]
+
+
   @@map("solicitudes_servicio")
 }
 
@@ -167,7 +170,7 @@ model Estado {
   nombre String @unique @db.VarChar(45)
 
   solicitudesServicio SolicitudServicio[]
-
+  postulaciones Postulacion[]
   workers         Worker[]
   sponsorWorkers  sponsor_worker[]
 
@@ -195,6 +198,7 @@ model Worker {
   // ✅ N–N con Servicio por tabla puente
   serviciosWorker ServicioWorker[]
   sponsorWorkers  sponsor_worker[]
+  postulaciones Postulacion[]
 
   // relación con Estado
   estado  Estado @relation(fields: [estadoId], references: [id])
@@ -277,4 +281,28 @@ model sponsor_worker {
 
   @@unique([sponsorId, workerId])
   @@map("sponsors_workers")
+}
+
+model Postulacion{
+
+  id Int @id @default(autoincrement())
+  workerId Int
+  solicitudServicioId Int
+  fechaPostulacion DateTime @default(now())
+  presupuestoPropuesto Float
+  fechaPropuesta DateTime
+  fechaAlternativa DateTime?
+  mensaje String?
+  tiempoEstimado String?
+  incluyeMateriales Boolean?
+  garantia String?
+  estadoId            Int @default(12) // Estado por defecto: "aplicado" (id=12)
+
+
+
+  worker Worker @relation(fields: [workerId], references: [id])
+  solicitudServicio SolicitudServicio @relation(fields: [solicitudServicioId], references: [id])
+  estado Estado @relation(fields: [estadoId], references: [id])
+
+  @@map("postulaciones")
 }
