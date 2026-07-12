@@ -155,6 +155,7 @@ export const getSolicitudBySolcitudId = async (req, res) => {
             include: {
                 servicio: true,
                 estado: true,
+                usuario:true,
 
             }
         });
