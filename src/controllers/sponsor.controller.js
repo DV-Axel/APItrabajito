@@ -677,65 +677,86 @@ export const datosHeaderSponsor = async (req, res) => {
 };
 
 export const decisionSponsoreo = async (req, res) => {
-    const { id } = req.params;
-    const { accion } = req.body;
-
-    console.log(req.body);
-    console.log(req.params);
-
     try {
+        const idSolicitudSponsoreo = Number(req.params.id);
+        const { accion } = req.body;
+
+        if (!Number.isInteger(idSolicitudSponsoreo)) {
+            return res.status(400).send({
+                message: "El ID de la solicitud de sponsoreo no es válido",
+            });
+        }
+
         if (!accion) {
             return res.status(400).send({
                 message: "No seleccionó una acción",
             });
         }
 
-        let nuevoEstado;
-
-        if (accion === "accept") {
-            nuevoEstado = 8;
-        } else if (accion === "reject") {
-            nuevoEstado = 9;
-        } else {
+        if (accion !== "accept" && accion !== "reject") {
             return res.status(400).send({
                 message: "Acción inválida",
             });
         }
 
-        const idWorker = await prisma.sponsor_worker.update({
-            where: {
-                id: parseInt(id),
-            },
-            data: {
-                estadoId: nuevoEstado,
-            },
-            select: {
-                workerId: true,
-            },
-        });
+        const nuevoEstado = accion === "accept" ? 8 : 9;
 
-        if(nuevoEstado === 8){
-            await prisma.worker.update({
+        const resultado = await prisma.$transaction(async (tx) => {
+            const relacionSponsorWorker = await tx.sponsor_worker.update({
                 where: {
-                    id: parseInt(idWorker.workerId),
+                    id: idSolicitudSponsoreo,
                 },
                 data: {
-                    estadoId: 8,
-                }
-            })
-        }
+                    estadoId: nuevoEstado,
+                },
+                select: {
+                    workerId: true,
+                },
+            });
+
+            const workerId = relacionSponsorWorker.workerId;
+
+            await tx.worker.update({
+                where: {
+                    id: workerId,
+                },
+                data: {
+                    estadoId: nuevoEstado,
+                },
+            });
+
+            await tx.servicioWorker.updateMany({
+                where: {
+                    workerId,
+                },
+                data: {
+                    estaActivo: accion === "accept",
+                },
+            });
+
+            return {
+                workerId,
+            };
+        });
 
         return res.status(200).send({
             message:
                 accion === "accept"
-                    ? "Sponsoreo aceptado"
-                    : "Sponsoreo rechazado",
+                    ? "Sponsoreo aceptado y servicios activados"
+                    : "Sponsoreo rechazado y servicios desactivados",
+            workerId: resultado.workerId,
         });
     } catch (error) {
         console.error("decisionSponsoreo error:", error);
 
+        if (error.code === "P2025") {
+            return res.status(404).send({
+                message: "La solicitud de sponsoreo no existe",
+            });
+        }
+
         return res.status(500).send({
-            error: "Error interno del servidor",
+            message: "Error interno del servidor",
         });
     }
 };
