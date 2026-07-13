@@ -289,7 +289,7 @@ model Postulacion{
   workerId Int
   solicitudServicioId Int
   fechaPostulacion DateTime @default(now())
-  presupuestoPropuesto Float
+  presupuesto Float
   fechaPropuesta DateTime
   fechaAlternativa DateTime?
   mensaje String?

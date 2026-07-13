@@ -4,7 +4,8 @@ import {
     registrarWorker,
     traerPerfilWorker,
     actualizarPerfilWorker,
-    traerTrabajosDisponibles
+    traerTrabajosDisponibles,
+    aplicarSolicitud
 } from '../controllers/worker.controller.js';
 
 export const workerRouter = Router();
@@ -13,6 +14,7 @@ workerRouter.post("/registrar-worker", uploadWorkerPhoto, registrarWorker);
 workerRouter.get("/perfil-worker/:id", traerPerfilWorker)
 workerRouter.put("/actualizar-perfil", actualizarPerfilWorker)
 workerRouter.get("/trabajos-disponibles", traerTrabajosDisponibles)
+workerRouter.post("/postularse-solicitud", aplicarSolicitud)
 
 
 export default workerRouter;

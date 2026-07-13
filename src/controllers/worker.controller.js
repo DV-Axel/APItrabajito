@@ -386,3 +386,75 @@ export const traerTrabajosDisponibles = async (req, res) => {
         });
     }
 };
+
+
+export const aplicarSolicitud = async (req, res) => {
+    try {
+        const usuario = await obtenerUsuarioAutenticado(req);
+        const workerId = usuario.worker.id;
+        const {
+            solicitudServicioId,
+            presupuesto,
+            tiempoEstimado,
+            fechaPropuesta,
+            fechaAlternativa,
+            incluyeMateriales,
+            garantia,
+            mensaje,
+        } = req.body;
+
+        console.log("usuario", usuario)
+        console.log("workerId", workerId)
+
+
+        if (!solicitudServicioId) {
+            return res.status(400).send({
+                message: "Solicitud ID es obligatorio",
+            });
+        }
+
+        // Verificar si el worker ya aplicó a esta solicitud
+        const aplicacionExistente = await prisma.postulacion.findFirst({
+            where: {
+                workerId: workerId,
+                solicitudServicioId: solicitudServicioId,
+            },
+        });
+
+        if (aplicacionExistente) {
+            return res.status(400).send({
+                message: "Ya aplicaste a esta solicitud",
+            });
+        }
+
+        // Crear la aplicación
+        await prisma.postulacion.create({
+            data: {
+                workerId,
+                solicitudServicioId,
+
+                presupuesto: Number(presupuesto),
+                tiempoEstimado,
+                fechaPropuesta: new Date(fechaPropuesta),
+                fechaAlternativa: fechaAlternativa
+                    ? new Date(fechaAlternativa)
+                    : null,
+
+                incluyeMateriales,
+                garantia: garantia || null,
+                mensaje,
+
+                fechaPostulacion: new Date(),
+            },
+        });
+
+        return res.status(200).send({
+            message: "Aplicación enviada con éxito",
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({
+            message: "Error interno del servidor",
+        });
+    }
+};
