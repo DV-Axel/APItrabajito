@@ -391,7 +391,15 @@ export const traerTrabajosDisponibles = async (req, res) => {
 export const aplicarSolicitud = async (req, res) => {
     try {
         const usuario = await obtenerUsuarioAutenticado(req);
+
+        if (!usuario?.worker) {
+            return res.status(403).send({
+                message: "Solo los trabajadores pueden postularse.",
+            });
+        }
+
         const workerId = usuario.worker.id;
+
         const {
             solicitudServicioId,
             presupuesto,
@@ -403,38 +411,74 @@ export const aplicarSolicitud = async (req, res) => {
             mensaje,
         } = req.body;
 
-        console.log("usuario", usuario)
-        console.log("workerId", workerId)
-
-
-        if (!solicitudServicioId) {
+        // Validar datos obligatorios
+        if (
+            !solicitudServicioId ||
+            !presupuesto ||
+            Number(presupuesto) <= 0 ||
+            !tiempoEstimado ||
+            !fechaPropuesta ||
+            !mensaje
+        ) {
             return res.status(400).send({
-                message: "Solicitud ID es obligatorio",
+                message: "Completa todos los campos obligatorios.",
             });
         }
 
-        // Verificar si el worker ya aplicó a esta solicitud
-        const aplicacionExistente = await prisma.postulacion.findFirst({
+        // Buscar la solicitud
+        const solicitud = await prisma.solicitudServicio.findUnique({
             where: {
-                workerId: workerId,
-                solicitudServicioId: solicitudServicioId,
+                id: Number(solicitudServicioId),
+            },
+            select: {
+                id: true,
+                usuarioId: true,
+                estadoId: true, // opcional si manejás estados
             },
         });
 
-        if (aplicacionExistente) {
-            return res.status(400).send({
-                message: "Ya aplicaste a esta solicitud",
+        if (!solicitud) {
+            return res.status(404).send({
+                message: "La solicitud no existe.",
             });
         }
 
-        // Crear la aplicación
+        if (solicitud.estadoId !== 1) {
+            return res.status(400).send({
+                message: "Esta solicitud ya no acepta postulaciones.",
+            });
+        }
+
+        // No puede postularse a su propia solicitud
+        if (solicitud.usuarioId === usuario.id) {
+            return res.status(400).send({
+                message: "No puedes postularte a tu propia solicitud.",
+            });
+        }
+
+        // Verificar si ya se postuló
+        const postulacionExistente = await prisma.postulacion.findFirst({
+            where: {
+                workerId,
+                solicitudServicioId: Number(solicitudServicioId),
+            },
+        });
+
+        if (postulacionExistente) {
+            return res.status(400).send({
+                message: "Ya te postulaste a esta solicitud.",
+            });
+        }
+
+        // Crear la postulación
         await prisma.postulacion.create({
             data: {
                 workerId,
-                solicitudServicioId,
+                solicitudServicioId: Number(solicitudServicioId),
 
                 presupuesto: Number(presupuesto),
                 tiempoEstimado,
+
                 fechaPropuesta: new Date(fechaPropuesta),
                 fechaAlternativa: fechaAlternativa
                     ? new Date(fechaAlternativa)
@@ -449,12 +493,14 @@ export const aplicarSolicitud = async (req, res) => {
         });
 
         return res.status(200).send({
-            message: "Aplicación enviada con éxito",
+            message: "Postulación enviada con éxito.",
         });
+
     } catch (error) {
-        console.error(error);
+        console.error("Error al aplicar a la solicitud:", error);
+
         return res.status(500).send({
-            message: "Error interno del servidor",
+            message: "Error interno del servidor.",
         });
     }
 };

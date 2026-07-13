@@ -1,6 +1,8 @@
 import {prisma} from "../data/prisma.js";
 import {parseIfString} from "../data/helpers.js";
 import {deleteUploadedFiles} from "../utils/fileUtils.js";
+import { obtenerUsuarioAutenticado } from "../helpers/obtenerUsuarioAutenticado.js";
+
 
 //CONTROLADORES NUEVOS
 export const getServicios = async (req, res) => {
@@ -144,31 +146,63 @@ export const getSolcitudesByUsuarioId = async (req, res) => {
 
 export const getSolicitudBySolcitudId = async (req, res) => {
     try {
-        const {id} = req.params;
+        const { id } = req.params;
 
         if (!id) {
-            return res.status(400).json({error: "Falta el parámetro id"});
+            return res.status(400).json({
+                error: "Falta el parámetro id",
+            });
         }
 
+        const usuario = await obtenerUsuarioAutenticado(req);
+        const usuarioId = usuario.id;
+        const workerId = usuario?.worker?.id;
+
         const solicitud = await prisma.solicitudServicio.findUnique({
-            where: {id: Number(id)},
+            where: {
+                id: Number(id),
+            },
             include: {
                 servicio: true,
                 estado: true,
-                usuario:true,
-
-            }
+                usuario: true,
+            },
         });
 
         if (!solicitud) {
-            return res.status(404).json({error: "Solicitud no encontrada"});
+            return res.status(404).json({
+                error: "Solicitud no encontrada",
+            });
         }
 
-        return res.status(200).json(solicitud);
+        const esPropietario = solicitud.usuarioId === usuarioId;
+
+        let yaPostulado = false;
+
+        if (workerId) {
+            const postulacion = await prisma.postulacion.findFirst({
+                where: {
+                    workerId,
+                    solicitudServicioId: Number(id),
+                },
+            });
+
+            yaPostulado = !!postulacion;
+        }
+
+        return res.status(200).json({
+            ...solicitud,
+            yaPostulado,
+            esPropietario
+        });
     } catch (error) {
         console.error("Error al obtener solicitud por id:", error);
+
+        return res.status(500).json({
+            error: "Error interno del servidor",
+        });
     }
-}
+};
 
 export const setCancelarSolicitud = async (req, res) => {
     try {
