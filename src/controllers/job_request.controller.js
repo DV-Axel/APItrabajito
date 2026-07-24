@@ -168,7 +168,12 @@ export const getSolicitudBySolcitudId = async (req, res) => {
                 usuario: true,
                 postulacionSeleccionada: {
                     include: {
-                        worker: true}}
+                        worker: {
+                            include:{
+                                usuario: true
+                            }
+                        }
+                    }}
             },
         });
 
