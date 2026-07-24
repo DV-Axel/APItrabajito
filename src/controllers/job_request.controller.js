@@ -1018,3 +1018,42 @@ export const setConfirmJobRequestFinalized = async (req, res) => {
         return res.status(500).json({error: error.message});
     }
 }
+
+export const getTop3Postulaciones = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const solicitudId = Number(id);
+
+        if (!Number.isInteger(solicitudId)) {
+            return res.status(400).json({
+                error: "El id de la solicitud no es válido",
+            });
+        }
+
+        const top3Postulaciones = await prisma.postulacion.findMany({
+            where: {
+                solicitudServicioId: solicitudId,
+            },
+            orderBy: {
+                presupuesto: "asc",
+            },
+            take: 3,
+            include: {
+                worker: {
+                    include: {
+                        usuario: true,
+                    },
+                },
+            },
+        });
+
+        return res.status(200).json(top3Postulaciones);
+    } catch (error) {
+        console.error("Error al obtener top 3 postulaciones:", error);
+
+        return res.status(500).json({
+            error: "Imposible obtener top 3 postulaciones",
+        });
+    }
+};
