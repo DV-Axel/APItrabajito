@@ -1057,3 +1057,71 @@ export const getTop3Postulaciones = async (req, res) => {
         });
     }
 };
+
+export const getPostulacionesBySolicitudId = async (req, res) => {
+    try {
+        const { idSolicitud } = req.params;
+
+        console.log("req.params:", req.params);
+        console.log("idSolicitud:", idSolicitud);
+
+        if (!idSolicitud) {
+            return res.status(400).json({
+                message: "Falta el parámetro idSolicitud",
+            });
+        }
+
+        const solicitud = await prisma.solicitudServicio.findUnique({
+            where: {
+                id: Number(idSolicitud),
+            },
+            select: {
+                id: true,
+                titulo: true,
+                descripcion: true,
+                servicio: {
+                    select: {
+                        id: true,
+                        nombre: true,
+                    },
+                },
+                postulaciones: {
+                    orderBy: {
+                        fechaPostulacion: "desc",
+                    },
+                    include: {
+                        worker: {
+                            include: {
+                                usuario: true,
+                            },
+                        },
+                        estado: true,
+                    },
+                },
+            },
+        });
+
+        if (!solicitud) {
+            return res.status(404).json({
+                message: "Solicitud no encontrada",
+            });
+        }
+
+        return res.status(200).json({
+            solicitud: {
+                id: solicitud.id,
+                titulo: solicitud.titulo,
+                descripcion: solicitud.descripcion,
+                servicio: solicitud.servicio,
+            },
+            postulaciones: solicitud.postulaciones,
+        });
+
+    } catch (error) {
+        console.error("Error al obtener postulaciones:", error);
+
+        return res.status(500).json({
+            message: "Error interno del servidor",
+        });
+    }
+};
