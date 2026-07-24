@@ -26,7 +26,9 @@ import {
     setCancelarSolicitud,
     setActualizarSolicitud,
     getTop3Postulaciones,
-    getPostulacionesBySolicitudId
+    getPostulacionesBySolicitudId,
+    getPostulacionById,
+    setSeleccionarPostulacion
 } from '../controllers/job_request.controller.js';
 import { uploadJobRequestPhotos } from '../middlewares/images/updateJobRequestPhotos.js';
 import { validateSchema } from '../middlewares/validations/validateSchema.js';
@@ -44,6 +46,8 @@ jobRequestRouter.post('/cancelar-solicitud/:id', setCancelarSolicitud);
 jobRequestRouter.put("/actualizar-solicitud/:id",cargarFotosServicios.array("fotos"),setActualizarSolicitud);
 jobRequestRouter.get("/top3-postulaciones/:id", getTop3Postulaciones);
 jobRequestRouter.get("/postulaciones/:idSolicitud", getPostulacionesBySolicitudId )
+jobRequestRouter.get("/postulacion/:idSolicitud/:idPostulacion", getPostulacionById)
+jobRequestRouter.patch("/seleccionar-postulacion", setSeleccionarPostulacion)
 
 
 

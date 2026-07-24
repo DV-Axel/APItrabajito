@@ -1125,3 +1125,120 @@ export const getPostulacionesBySolicitudId = async (req, res) => {
         });
     }
 };
+
+
+export const getPostulacionById = async (req, res) => {
+    try {
+        const {idSolicitud, idPostulacion} = req.params;
+
+        if (!idSolicitud || !idPostulacion) {
+            return res.status(400).json({
+                message: "Faltan los parámetros idSolicitud o idPostulacion",
+            });
+        }
+
+        const postulacion = await prisma.postulacion.findUnique({
+            where: {
+                id: Number(idPostulacion),
+                solicitudServicioId: Number(idSolicitud)
+            },
+            include: {
+                worker: {
+                    include: {
+                        usuario: true,
+                    },
+                },
+                estado: true,
+                solicitudServicio: {
+                    include:{
+                        servicio:true
+                    }
+                }
+            },
+        });
+
+        if (!postulacion) {
+            return res.status(404).json({
+                message: "Postulación no encontrada",
+            });
+        }
+
+        return res.status(200).json({postulacion})
+    } catch (error) {
+        console.error("Error al obtener postulacion por id:", error);
+
+        return res.status(500).json({
+            message: "Error interno del servidor",
+        });
+    }
+};
+
+export const setSeleccionarPostulacion = async (req, res) => {
+    try {
+        const { idSolicitud, idPostulacion } = req.body;
+        const usuario = await obtenerUsuarioAutenticado(req);
+
+        if (!idSolicitud || !idPostulacion) {
+            return res.status(400).json({
+                message: "Faltan datos obligatorios",
+            });
+        }
+
+        const solicitud = await prisma.solicitudServicio.findFirst({
+            where: {
+                id: Number(idSolicitud),
+                usuarioId: usuario.id,
+            },
+        });
+
+        if (!solicitud) {
+            return res.status(404).json({
+                message: "Solicitud no encontrada",
+            });
+        }
+
+        const postulacion = await prisma.postulacion.findFirst({
+            where: {
+                id: Number(idPostulacion),
+                solicitudServicioId: Number(idSolicitud),
+            },
+        });
+
+        if (!postulacion) {
+            return res.status(404).json({
+                message: "Postulación no encontrada",
+            });
+        }
+
+        const postulacionSeleccionada = await prisma.postulacion.update({
+            where: {
+                id: Number(idPostulacion),
+            },
+            data: {
+                estadoId: 13,
+            },
+        });
+
+        // TODO: HACER LA LOGICA DE ENVIO DE EMAIL
+
+        const cambiarEstadoSolicitud = await prisma.solicitudServicio.update({
+            where:{
+                id: Number(idSolicitud)
+            },
+            data:{
+                estadoId: 2
+            }
+        })
+
+        return res.status(200).json({
+            message: "Profesional seleccionado correctamente",
+            postulacion: postulacionSeleccionada,
+        });
+    } catch (error) {
+        console.error("Error al seleccionar postulación:", error);
+
+        return res.status(500).json({
+            message: "Error interno del servidor",
+        });
+    }
+};
