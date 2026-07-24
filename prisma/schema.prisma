@@ -150,17 +150,19 @@ model SolicitudServicio {
   fechaCreacion         DateTime @default(now())
   visible               Boolean  @default(true)
 
-  usuarioId  Int
-  estadoId   Int @default(1)
-  servicioId Int
+  usuarioId                    Int
+  estadoId                     Int @default(1)
+  servicioId                   Int
+  postulacionSeleccionadaId    Int? @unique
 
   // Relaciones
   usuario  Usuario  @relation(fields: [usuarioId], references: [id])
   estado   Estado   @relation(fields: [estadoId], references: [id])
   servicio Servicio @relation(fields: [servicioId], references: [id])
 
-  postulaciones Postulacion[]
+  postulaciones Postulacion[] @relation("PostulacionesSolicitud")
 
+  postulacionSeleccionada Postulacion? @relation(  "PostulacionSeleccionada",  fields: [postulacionSeleccionadaId],  references: [id]  )
 
   @@map("solicitudes_servicio")
 }
@@ -283,26 +285,27 @@ model sponsor_worker {
   @@map("sponsors_workers")
 }
 
-model Postulacion{
-
-  id Int @id @default(autoincrement())
-  workerId Int
+model Postulacion {
+  id                  Int      @id @default(autoincrement())
+  workerId            Int
   solicitudServicioId Int
-  fechaPostulacion DateTime @default(now())
-  presupuesto Float
-  fechaPropuesta DateTime
-  fechaAlternativa DateTime?
-  mensaje String?
-  tiempoEstimado String?
-  incluyeMateriales Boolean?
-  garantia String?
-  estadoId            Int @default(12) // Estado por defecto: "aplicado" (id=12)
+  fechaPostulacion    DateTime @default(now())
+  presupuesto         Float
+  fechaPropuesta      DateTime
+  fechaAlternativa    DateTime?
+  mensaje             String?
+  tiempoEstimado      String?
+  incluyeMateriales   Boolean?
+  garantia            String?
+  estadoId            Int      @default(12)
 
+  worker Worker @relation(  fields: [workerId],  references: [id]  )
 
+  solicitudServicio SolicitudServicio @relation(  "PostulacionesSolicitud",  fields: [solicitudServicioId],  references: [id]  )
 
-  worker Worker @relation(fields: [workerId], references: [id])
-  solicitudServicio SolicitudServicio @relation(fields: [solicitudServicioId], references: [id])
-  estado Estado @relation(fields: [estadoId], references: [id])
+  solicitudDondeFueSeleccionada SolicitudServicio? @relation("PostulacionSeleccionada" )
+
+  estado Estado @relation(fields: [estadoId], references: [id] )
 
   @@map("postulaciones")
 }

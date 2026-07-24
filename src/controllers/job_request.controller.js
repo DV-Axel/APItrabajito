@@ -166,6 +166,9 @@ export const getSolicitudBySolcitudId = async (req, res) => {
                 servicio: true,
                 estado: true,
                 usuario: true,
+                postulacionSeleccionada: {
+                    include: {
+                        worker: true}}
             },
         });
 
@@ -1226,7 +1229,8 @@ export const setSeleccionarPostulacion = async (req, res) => {
                 id: Number(idSolicitud)
             },
             data:{
-                estadoId: 2
+                estadoId: 2,
+                postulacionSeleccionadaId: Number(idPostulacion),
             }
         })
 
