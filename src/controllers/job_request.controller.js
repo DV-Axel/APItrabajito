@@ -1246,3 +1246,87 @@ export const setSeleccionarPostulacion = async (req, res) => {
         });
     }
 };
+
+
+export const setConfirmacionRequester = async (req, res) => {
+    try {
+        const { idSolicitud, idPostulacion } = req.body;
+
+        if (!idSolicitud || !idPostulacion) {
+            return res.status(400).json({
+                message: "Falta idSolicitud o idPostulacion",
+            });
+        }
+
+        const usuario = await obtenerUsuarioAutenticado(req);
+
+        if (!usuario) {
+            return res.status(401).json({
+                message: "Usuario no autenticado",
+            });
+        }
+
+        const solicitud = await prisma.solicitudServicio.findFirst({
+            where: {
+                id: Number(idSolicitud),
+                usuarioId: usuario.id,
+                postulacionSeleccionadaId: Number(idPostulacion),
+            },
+            select: {
+                id: true,
+                acuerdoRequester: true,
+                acuerdoWorker: true,
+                postulacionSeleccionadaId: true,
+            },
+        });
+
+        if (!solicitud) {
+            return res.status(404).json({
+                message:
+                    "Solicitud no encontrada, no pertenece al usuario o la postulación no es la seleccionada",
+            });
+        }
+
+        if (solicitud.acuerdoRequester) {
+            return res.status(200).json({
+                message: "El requester ya había confirmado el acuerdo",
+                acuerdoRequester: true,
+                acuerdoWorker: solicitud.acuerdoWorker,
+                acuerdoCompleto: solicitud.acuerdoWorker,
+            });
+        }
+
+        const solicitudActualizada =
+            await prisma.solicitudServicio.update({
+                where: {
+                    id: solicitud.id,
+                },
+                data: {
+                    acuerdoRequester: true,
+                },
+                select: {
+                    id: true,
+                    acuerdoRequester: true,
+                    acuerdoWorker: true,
+                },
+            });
+
+        const acuerdoCompleto =
+            solicitudActualizada.acuerdoRequester &&
+            solicitudActualizada.acuerdoWorker;
+
+        return res.status(200).json({
+            message: acuerdoCompleto
+                ? "Acuerdo confirmado por ambas partes"
+                : "Acuerdo del requester confirmado",
+            solicitud: solicitudActualizada,
+            acuerdoCompleto,
+        });
+    } catch (error) {
+        console.error("Error al confirmar acuerdo requester:", error);
+
+        return res.status(500).json({
+            message: "Error interno del servidor",
+        });
+    }
+};

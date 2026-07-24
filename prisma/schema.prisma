@@ -149,6 +149,8 @@ model SolicitudServicio {
   desgloseDireccion     Json
   fechaCreacion         DateTime @default(now())
   visible               Boolean  @default(true)
+  acuerdoWorker           Boolean  @default(false)
+  acuerdoRequester          Boolean  @default(false)
 
   usuarioId                    Int
   estadoId                     Int @default(1)

@@ -28,7 +28,8 @@ import {
     getTop3Postulaciones,
     getPostulacionesBySolicitudId,
     getPostulacionById,
-    setSeleccionarPostulacion
+    setSeleccionarPostulacion,
+    setConfirmacionRequester
 } from '../controllers/job_request.controller.js';
 import { uploadJobRequestPhotos } from '../middlewares/images/updateJobRequestPhotos.js';
 import { validateSchema } from '../middlewares/validations/validateSchema.js';
@@ -48,6 +49,7 @@ jobRequestRouter.get("/top3-postulaciones/:id", getTop3Postulaciones);
 jobRequestRouter.get("/postulaciones/:idSolicitud", getPostulacionesBySolicitudId )
 jobRequestRouter.get("/postulacion/:idSolicitud/:idPostulacion", getPostulacionById)
 jobRequestRouter.patch("/seleccionar-postulacion", setSeleccionarPostulacion)
+jobRequestRouter.patch("/confirmar-acuerdo-requester", setConfirmacionRequester)
 
 
 
