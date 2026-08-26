@@ -18,6 +18,8 @@ bower_components/
 # Optional npm cache directory
 .npm
 
+
+
 # Optional eslint cache
 .eslintcache
 
@@ -26,6 +28,7 @@ bower_components/
 
 # dotenv environment variables file
 .env
+.bkpenv
 # Carpeta de datos de Postgres
 postgres/
 # Archivo de imagen Docker
