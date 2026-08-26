@@ -151,6 +151,7 @@ model SolicitudServicio {
   visible               Boolean  @default(true)
   acuerdoWorker           Boolean  @default(false)
   acuerdoRequester          Boolean  @default(false)
+  fechaFinalizacion        DateTime?
 
   usuarioId                    Int
   estadoId                     Int @default(1)
@@ -300,6 +301,7 @@ model Postulacion {
   incluyeMateriales   Boolean?
   garantia            String?
   estadoId            Int      @default(12)
+  calificacion        Float?
 
   worker Worker @relation(  fields: [workerId],  references: [id]  )
 

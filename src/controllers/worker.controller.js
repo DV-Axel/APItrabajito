@@ -504,3 +504,39 @@ export const aplicarSolicitud = async (req, res) => {
         });
     }
 };
+
+export const traerTrabajosPostulado = async (req, res) => {
+    try {
+        const usuario = await obtenerUsuarioAutenticado(req);
+
+        if (!usuario?.worker) {
+            return res.status(403).send({
+                message: "Solo los trabajadores pueden ver sus postulaciones.",
+            });
+        }
+
+        const workerId = usuario.worker.id;
+
+        const postulaciones = await prisma.postulacion.findMany({
+            where: {
+                workerId,
+            },
+            include: {
+                solicitudServicio: {
+                    include: {
+                        usuario: true,
+                        servicio: true,
+                    },
+                },
+            },
+        });
+
+        return res.status(200).send(postulaciones);
+
+    } catch (error) {
+        console.error("Error al traer trabajos postulados:", error);
+        return res.status(500).send({
+            message: "Error interno del servidor.",
+        });
+    }
+};

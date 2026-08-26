@@ -427,6 +427,10 @@ export const extraerDatosUsuario = async (req, res) => {
                 worker: {
                     id: usuario.worker?.id,
                     estadoId: usuario.worker?.estadoId,
+                    fotoPerfilWorker: usuario.worker?.fotoPerfilWorker,
+                    rating: usuario.worker?.rating,
+                    tituloProfesional: usuario.worker?.tituloProfesional,
+                    trabajosCompletados: usuario.worker?.trabajosCompletados
                 },
             },
         });

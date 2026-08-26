@@ -1320,6 +1320,17 @@ export const setConfirmacionRequester = async (req, res) => {
             solicitudActualizada.acuerdoRequester &&
             solicitudActualizada.acuerdoWorker;
 
+        if (acuerdoCompleto) {
+            await prisma.solicitudServicio.update({
+                where: {
+                    id: solicitud.id
+                },
+                data: {
+                    estadoId: 3
+                }
+            });
+        }
+
         return res.status(200).json({
             message: acuerdoCompleto
                 ? "Acuerdo confirmado por ambas partes"
@@ -1335,3 +1346,103 @@ export const setConfirmacionRequester = async (req, res) => {
         });
     }
 };
+
+export const setConfirmacionWorker = async (req, res) => {
+    try{
+        console.log(req.body)
+        const {idSolicitud, idPostulacion} = req.body;
+
+        if(!idSolicitud || !idPostulacion){
+            return res.status(400).json({message:"Falta idSolicitud o idPostulacion"});
+        }
+
+        const usuario = await obtenerUsuarioAutenticado(req);
+
+        if(!usuario){
+            return res.status(401).json({message:"Usuario no autenticado"});
+        }
+
+        const postulacion = await prisma.postulacion.findFirst({
+            where:{
+                id: Number(idPostulacion),
+                workerId: Number(usuario.worker.id),
+                solicitudServicioId: Number(idSolicitud)
+            }})
+
+        if(!postulacion){
+            return res.status(404).json({message:"Postulación no encontrada o no pertenece al worker"});
+        }
+
+        const solicitud = await prisma.solicitudServicio.findFirst({
+            where: {
+                id: Number(idSolicitud),
+                postulacionSeleccionadaId: Number(idPostulacion),
+            },
+            select: {
+                id: true,
+                acuerdoRequester: true,
+                acuerdoWorker: true,
+                postulacionSeleccionadaId: true,
+            },
+        });
+
+        if (!solicitud) {
+            return res.status(404).json({
+                message:
+                    "Solicitud no encontrada, no pertenece al usuario o la postulación no es la seleccionada",
+            });
+        }
+
+        if (solicitud.acuerdoWorker) {
+            return res.status(200).json({
+                message: "El worker ya había confirmado el acuerdo"
+            });
+        }
+
+        const solicitudActualizada =
+            await prisma.solicitudServicio.update({
+                where: {
+                    id: solicitud.id,
+                },
+                data: {
+                    acuerdoWorker: true,
+                },
+                select: {
+                    id: true,
+                    acuerdoRequester: true,
+                    acuerdoWorker: true,
+                },
+            });
+
+
+        const acuerdoCompleto =
+            solicitudActualizada.acuerdoRequester &&
+            solicitudActualizada.acuerdoWorker;
+
+        if (acuerdoCompleto) {
+            await prisma.solicitudServicio.update({
+                where: {
+                    id: solicitud.id
+                },
+                data: {
+                    estadoId: 3
+                }
+            });
+        }
+
+        return res.status(200).json({
+            message: acuerdoCompleto
+                ? "Acuerdo confirmado por ambas partes"
+                : "Acuerdo del worker confirmado",
+            solicitud: solicitudActualizada,
+            acuerdoCompleto,
+        });
+
+    }catch (error){
+        console.error("Error al confirmar acuerdo worker:", error);
+
+        return res.status(500).json({
+            message: "Error interno del servidor",
+        });
+    }
+}

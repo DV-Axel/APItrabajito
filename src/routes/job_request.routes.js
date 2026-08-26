@@ -29,7 +29,8 @@ import {
     getPostulacionesBySolicitudId,
     getPostulacionById,
     setSeleccionarPostulacion,
-    setConfirmacionRequester
+    setConfirmacionRequester,
+    setConfirmacionWorker
 } from '../controllers/job_request.controller.js';
 import { uploadJobRequestPhotos } from '../middlewares/images/updateJobRequestPhotos.js';
 import { validateSchema } from '../middlewares/validations/validateSchema.js';
@@ -50,6 +51,7 @@ jobRequestRouter.get("/postulaciones/:idSolicitud", getPostulacionesBySolicitudI
 jobRequestRouter.get("/postulacion/:idSolicitud/:idPostulacion", getPostulacionById)
 jobRequestRouter.patch("/seleccionar-postulacion", setSeleccionarPostulacion)
 jobRequestRouter.patch("/confirmar-acuerdo-requester", setConfirmacionRequester)
+jobRequestRouter.patch("/confirmar-acuerdo-worker", setConfirmacionWorker)
 
 
 
